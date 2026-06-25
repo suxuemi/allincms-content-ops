@@ -15,49 +15,20 @@ Use it to turn source material into audited AllinCMS website content:
 3. If you are a new user, follow [QUICKSTART.md](../../QUICKSTART.md).
 4. For the actual skill instructions, read [allincms-content-ops/SKILL.md](../../allincms-content-ops/SKILL.md).
 
-## Use with AI (one-shot install)
+## Use with AI (one-line install)
 
-Copy the whole block below (everything between the triple backticks) and paste it to Claude Code / Codex / Cursor / any AI coding agent. The AI will install and operate the skill.
+Copy the block below and paste it to Claude Code / Codex / Cursor / any AI coding agent. The AI will install, introduce the skill in your language, list a few common starting points, and ask you where to begin:
 
 ````text
-Please install this AllinCMS content-ops skill and operate by it:
+Install this skill and run its first-contact protocol to onboard me:
+https://github.com/suxuemi/allincms-content-ops
 
-0. First `cd` into an isolated directory (recommended: `~/skills`; if missing, `mkdir -p ~/skills && cd ~/skills`). DO NOT clone inside one of my existing projects — it pollutes `.git` and IDE indexing.
-
-1. In that directory, run:
-   git clone https://github.com/suxuemi/allincms-content-ops.git
-   cd allincms-content-ops
-
-   Note: the repo root contains a **same-named subfolder** `allincms-content-ops/`. The actual skill files (`SKILL.md` / `references/` / `scripts/`) live in that subfolder.
-
-2. Read `allincms-content-ops/SKILL.md` — that is your operating contract.
-
-   **Write discipline for rule-source files**:
-   - `SKILL.md` and `references/*` are READ-ONLY.
-   - `wiki/lessons.md` accepts only NEW entries with `status: proposed`. Never write `approved` directly; never edit existing entries. Approval is mine.
-   - `wiki/backlog.md` accepts new `status: open` TODOs.
-   - `PROJECT_INDEX.md` — only fill empty `Current Site` fields from my dictation; do not touch anything else.
-   - When I say "from now on do X" → you MUST add a `proposed` entry in `wiki/lessons.md`, NOT edit SKILL.md or `references/*`.
-
-3. Read `PROJECT_INDEX.md` → `Current Site`. If any field is empty, STOP and ask me; resume after I answer.
-
-4. For every request after this, classify it per SKILL.md → Mode Selection (light vs full).
-
-   Full-mode = Workflow steps 0–9, all of them. **Step 0** (sweep `wiki/lessons.md` for `approved` and merge) and **Step 9** (you MUST ask me verbatim: "Any corrections worth keeping, new directions to try, or TODOs to add from this run?") are **hard gates** — skipping either counts as undelivered work.
-
-5. Run: `python3 allincms-content-ops/scripts/audit_content.py --status .`
-
-   Expected output includes 5 seed `proposed` lessons, 3 backlog rows, and 1 example audit file. These are **scaffold samples, NOT problems in my project** — relay them verbatim, do not clean up unprompted.
-
-Environment notes:
-- No shell capability (e.g. claude.ai web) → tell me "I cannot run shell; please execute steps 1 and 5 locally and paste output". Do NOT pretend to execute.
-- Windows → use `python` instead of `python3`; split commands onto separate lines; avoid `&&` on legacy PowerShell.
-- Target dir already has `allincms-content-ops/` → `cd` in and `git pull`. NEVER `rm -rf`.
-
-Task: <<Replace this entire line with your real task before pasting. If you (the AI) see the literal angle-bracket placeholder in your input, STOP and ask the user "what specifically do you want to do?" instead of acting.>>
+Clone under ~/skills (don't pollute my current project), then read allincms-content-ops/SKILL.md + allincms-content-ops/references/first-contact.md and follow first-contact to start the conversation. Env notes: no-shell hosts (claude.ai web) — tell me to run steps locally, don't pretend; Windows — use `python` not `python3`; already cloned — `git pull`, never `rm -rf`.
 ````
 
-For advanced scenarios (global skill install, multi-project use, project reset, Codex symlink), see [INSTALL.md](../../INSTALL.md).
+> After install, the AI will: (1) detect your language (zh / en auto), (2) frame what this skill solves in one sentence, (3) list 3–5 concrete starter scenarios (draft & ship / monitor competitors / audit a page / init a new project / explore), then (4) ask one meta-question so you can pick. Only then does it enter the SKILL.md Workflow.
+
+> Want to skip the heuristic intro and hand the AI a specific task directly? See [INSTALL.md](../../INSTALL.md) → "task-first variant".
 
 ## Main Folders
 
