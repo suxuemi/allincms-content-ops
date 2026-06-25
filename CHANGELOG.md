@@ -6,6 +6,30 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.3.0] — 2026-06-26
+
+self-applied v0.3.0 — first release authored under the Update Checklist itself defines.
+
+Codex round: [audits/codex-rounds/v0.3.0-r1.md](audits/codex-rounds/v0.3.0-r1.md) (6 findings, 4 high / 2 med, all applied).
+
+### Added
+
+- `CONTRIBUTING.md` § Update Checklist — formalises the discipline every maintainer change must follow. Classification table with hard limits on Trivial self-classification; per-finding response (no arbitrary % thresholds); persistent regression check via `audit_skill_meta.py`; sweep dispatch clause for mid-session rule changes; emergency / security fast-track; meta-loop rule for the checklist's own versioning.
+- `CONTRIBUTING.md` § Historical reconciliation — one-time note that `v0.2.0` is not yanked / not retroactively re-audited; the checklist is enforced from `v0.3.0` onward.
+- `allincms-content-ops/references/codex-design-reviewer.md` — design-time codex brief (independent from the existing content reviewer). Inputs: diff + classification + motivation + round id. Four default lens: classification / process matrix / historical reconciliation / falsifiability.
+- `allincms-content-ops/scripts/audit_skill_meta.py` — persistent regression check (28 entries at v0.3.0 covering rounds r7 / r8 / r9 / r1). Replaces throwaway self-adversarial heredocs.
+- `audits/codex-rounds/v0.3.0-r1.md` — first persisted codex round output. From now on, every codex review is persisted here so CHANGELOG references resolve.
+
+### Changed
+
+- `allincms-content-ops/SKILL.md` Resource Map — registers the new reference, script, and audits directory.
+
+### Migration
+
+(none — additive only.)
+
+[0.3.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.3.0
+
 ## [0.2.0] — 2026-06-26
 
 Initial public release after eight rounds of Codex-style adversarial review (50+ findings applied across review, scripts, references, first-contact, monitoring, update mechanism).
@@ -30,5 +54,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.3.0...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

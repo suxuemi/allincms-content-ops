@@ -205,7 +205,10 @@ All three must point back to this skill and the same `PROJECT_INDEX.md`. Do not 
 - `scripts/check_version_sync.py`: CI-friendly verifier that `VERSION` ↔ `agents/openai.yaml` are in sync.
 - `/VERSION` (repo root): single-line semver; the only place that defines what version this skill is. See `/CONTRIBUTING.md` for bump decision tree.
 - `/CHANGELOG.md` (repo root): release notes per version; entries are added when SKILL.md / references/* / scripts/* change (via step 0 lessons→changelog bridge or release bumps).
-- `/CONTRIBUTING.md` (repo root): semver decision tree, bump procedure, pinning policy, lessons→changelog bridge.
+- `/CONTRIBUTING.md` (repo root): Update Checklist + semver decision tree + bump procedure + pinning policy + lessons→changelog bridge + checklist self-versioning.
+- `references/codex-design-reviewer.md`: codex brief for **design-time** review (separate from content-time `codex-adversarial-reviewer.md`). Required for Substantive / Breaking changes per the Update Checklist.
+- `scripts/audit_skill_meta.py`: persistent regression check (one switch per high-severity codex finding); replaces throwaway heredoc self-scans. Run in CI after every `audit_content.py` run.
+- `audits/codex-rounds/`: per-round codex review outputs. CHANGELOG entries reference findings here by relative path.
 - `scripts/sitemap_diff.py`: fetch each competitor's `sitemap.xml`, diff against the last snapshot, write a dated diff file under `monitoring/runs/sitemap/`, and (optionally) append new URLs as `proposed` opportunities.
 - `references/prompt-templates.md`: copy-paste prompts for persona extraction, search-intent brief, outline, competitor distillation, alt text, and lesson proposal.
 - `references/content-system-tables.md`: four-table model — knowledge / competitors / opportunities / copy library — with cadence and write-authority rules.

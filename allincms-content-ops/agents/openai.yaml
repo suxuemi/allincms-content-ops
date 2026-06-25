@@ -2,4 +2,4 @@ interface:
   display_name: "AllinCMS Content Ops"
   short_description: "AllinCMS SEO content operations"
   default_prompt: "Use $allincms-content-ops to turn source material into audited AllinCMS SEO/GEO content."
-version: "0.2.0"
+version: "0.3.0"
