@@ -12,6 +12,14 @@ Cheap detection: if the user's first message contains the repo URL **and** `wiki
 
 If the user's opening message already names a concrete task with enough specifics to act (e.g. "audit my slug=foo page", "fetch this URL into raw/", "list status"), SKIP all four phases below and route straight per SKILL.md → Mode Selection. Do not force the user through onboarding when they already know what they want.
 
+**Skip × Required Context interaction**:
+
+- Skipping into **light-mode** (typo / single-field edit / `audit_content.py --light` / `--status` / reading) does **NOT** trigger the `Current Site` STOP. SKILL.md → Required Context explicitly exempts these.
+- Skipping into a **full-mode** path that touches AllinCMS, publishes, captures monitoring, or runs `site_health_check.py` DOES trigger the STOP — STOP first, route the user through `init_content_ops_project.py`.
+- If the skip target is full-mode Workflow steps 3–8 AND `wiki/company.md` is in `unfilled` / `ai-drafted-unreviewed` state (see Phase 1 detection), warn the user once before proceeding:
+  > 我能直接开干，但 wiki/company.md 还没建过，跑到 step 7 audit 一定会被 `differentiation` / `credibility_evidence` 卡 Hard Gate。先花 5 分钟跑 Path B/C 建上下文，还是硬上看 audit 把哪些点打回来？
+  Then wait for the user's choice before continuing.
+
 ## Language detection
 
 Detect from the user's opening message:
@@ -26,22 +34,22 @@ Do NOT default to PROJECT_INDEX `Default content language` — that's site-wide,
 
 ## Phase 1: Context probe (silent — at most one short user-facing line)
 
-Before listing anything, open these in order:
+Before listing anything, open these in order and classify:
 
-| Source | What you're checking | "Filled" heuristic |
-|---|---|---|
-| `wiki/company.md` | positioning, proof, open questions | > 80 words AND not a verbatim init template stub |
-| `wiki/products/*.md` | any product .md beyond a stub | any file > 30 words |
-| `wiki/personas/*.md` | any persona | any file > 30 words |
-| `PROJECT_INDEX.md` → `Current Site` → `Front-end domain` | a fetchable URL we can probe | non-empty, non-placeholder |
+| Source | "Filled" detection (precise) |
+|---|---|
+| `wiki/company.md` | **Sentinel `<!-- first-contact: unfilled -->` is absent** AND Positioning section non-empty character count ≥ 60. The init template ships the sentinel; first-contact removes it when committing a confirmed bootstrap. Any human/AI edit to the file should remove the sentinel. |
+| `wiki/products/*.md`, `wiki/personas/*.md` | Any file > 30 non-whitespace characters in the body section (excluding frontmatter and section headers). |
+| `PROJECT_INDEX.md` → `Current Site` → `Front-end domain` | Non-empty AND not one of these placeholders: `TODO`, `example.com`, `<your-domain>`, `your-site.com`, `<domain>`. |
 
-Classify the project into one of three states:
+Classify the project into one of these states:
 
-- **A. Known** — `wiki/company.md` is filled (and ideally products/personas too)
-- **B. Probable** — `Front-end domain` is set but wiki content is stub
-- **C. Cold** — both empty
+- **A. Known** — `wiki/company.md` filled (sentinel gone + ≥ 60 chars in Positioning) AND frontmatter does **not** carry `needs_human_review: true`. Ideally products/personas also filled, but not required.
+- **A′. AI-bootstrap pending review** — `wiki/company.md` filled, but frontmatter carries `trust: ai-drafted` and `needs_human_review: true`. A previous first-contact wrote this; nobody confirmed yet.
+- **B. Probable** — `Front-end domain` is set (non-placeholder), wiki content is stub (sentinel present).
+- **C. Cold** — both empty / placeholder.
 
-The single user-facing line for Phase 1 is at most: "先看一眼你项目背景，建议才贴你 / Quick read on your project so suggestions land where you are."
+The single user-facing line for Phase 1 is at most: `先看一眼你项目背景，建议才贴你 / Quick read on your project so suggestions land where you are.` Do NOT dump the classification result to the user — keep it internal.
 
 ## Phase 2: Establish context (one path)
 
@@ -50,27 +58,41 @@ The single user-facing line for Phase 1 is at most: "先看一眼你项目背景
 Paraphrase what's in `wiki/company.md` back in ONE sentence: "看到你写了：你是 [行业] 卖给 [ICP] 的 [产品类]，主张是 [一句话]。对吗？/ Reading your wiki: [paraphrase]. Right?"
 
 If user confirms → go to Phase 3.
-If user corrects → record the correction as a **proposed** entry in `wiki/lessons.md` (`trigger: user_correction`, `scope: project`) and update the paraphrase. Do NOT silently rewrite `wiki/company.md` — that needs human curation per the wiki contract.
+If user corrects → do NOT silently rewrite `wiki/company.md` (that's human-curated per the wiki contract). Instead, propose a one-line patch and ask the user to make the edit (or to grant a one-shot write). Only after explicit approval, write the patch. If the correction reveals a missing rule rather than a fact, `scripts/note.py --kind correction "..." --why "..."` instead.
+
+### Path A′ — AI-bootstrap pending review (don't paraphrase your own draft as ground truth)
+
+If Phase 1 classified the project as A′, the existing `wiki/company.md` was written by a prior first-contact run and never confirmed. **Do NOT paraphrase it back to the user as if it were ground truth** — paraphrasing AI content back to the user is a feedback-loop hallucination.
+
+Instead, surface it honestly:
+
+> 上次我替你起草了一段 `wiki/company.md` 但没人复核过。两条路：
+> ① 你 30 秒读一遍我把 `needs_human_review` 关掉，进 Phase 3。
+> ② 推翻重来，走 Path B 或 C 重新建。
+
+Show the existing content verbatim (don't paraphrase). Wait for the user to pick. On choice ①, remove the `needs_human_review: true` field after the user confirms; flip `trust:` from `ai-drafted` to `human-verified`. On choice ②, archive the old content (move to `wiki/_archive/company-<date>.md`) then restart Path B or C.
 
 ### Path B — Probable (have domain, no positioning yet)
 
-Offer two paths, user picks one:
+Offer two paths and **explicitly ask permission** before any network action:
 
 > `company.md` 还没填。两个办法二选一：
-> 1. 我去 fetch `[Front-end domain]` 主页，自动提炼一段定位，你看完确认。
+> 1. 我可以**现在去 fetch 一次** `[Front-end domain]`（一个 GET，只读 HTML head + 首屏），用提炼草一段定位你看。
 > 2. 你直接 3 行告诉我：① 卖什么 ② 给谁 ③ 一句话优势。
-> 哪个？
+> 哪个？（如果是 1，我等你回 "可以 / 去" 才发请求。）
 
-If 1 chosen and env supports web fetch:
-- Fetch the homepage HTML
-- Extract `<title>`, `<meta name="description">`, hero `<h1>`, first paragraph
-- Propose draft `wiki/company.md` content (≤ 8 lines, marked `trust: ai-drafted, needs_human_review: true`)
-- Show the draft to user, ask confirmation
-- On confirmation, write `wiki/company.md`
+**Fetch contract for option 1**:
 
-If 1 chosen but env has no web fetch (claude.ai web, sandboxed Codex run): say so honestly, fall through to option 2.
+- Wait for explicit consent (`可以 / 1 / 去 / yes`). Treating silence as consent is NOT acceptable — staging/internal domains may trigger WAF alerts or violate corporate policy.
+- If env has no web-fetch tool (claude.ai web, sandboxed runs) → say so honestly and fall through to option 2.
+- If consent given, fetch ONCE. Extract: `<title>`, `<meta name="description">`, top `<h1>`, first non-nav paragraph.
+- **Minimum signal gate**: if the extracted text totals fewer than 30 meaningful words (SPA shell, blank meta, Cloudflare challenge body containing `Just a moment` / `cf-mitigated` / `Checking your browser`), do NOT draft from it. Say so honestly:
+  > 首页 fetch 回来主要是 JS 壳 / Cloudflare challenge，没拿到足够定位信号。切换到方式 2，你 3 行告诉我。
+  Then go to option 2.
+- If signal is sufficient, draft `wiki/company.md` content (≤ 8 lines) with the frontmatter from `references/corpus-layout.md` § AI-drafted wiki pages. Show the draft verbatim, wait for user's `OK / 改 / 重来`.
+- Only on `OK` write the file. On `改 X`, revise once and re-show. On `重来`, drop the fetch attempt and go to option 2.
 
-If 2 chosen → ask the 3 questions one message at a time (don't dump a form). After all three, propose `wiki/company.md` content with the same `needs_human_review: true` flag.
+If 2 chosen → ask the 3 questions **one message at a time** (don't dump a form). After all three answers, draft `wiki/company.md` content with the same frontmatter. Show verbatim, wait for OK before writing.
 
 ### Path C — Cold
 
@@ -78,17 +100,31 @@ Skip the choice — just ask the 3 questions directly. Same write-with-confirmat
 
 ## Phase 3: Tailored scenarios
 
-Now — and only now — list 3–5 concrete starter scenarios. Each scenario MUST reference what the user just told you (or what `company.md` says). Don't echo generic templates.
+Now — and only now — list 3–5 concrete starter scenarios.
 
-Examples for a hypothetical 外贸 SaaS:
+### Token-bind self-check (mandatory, run BEFORE sending Phase 3)
 
-- **起草并发布一篇 SEO 文章** — 比如：为「外贸团队负责人」写一篇「冷启动 domain warmup」的 SEO 文章
+1. Extract from Phase 2 user answers (or paraphrased `company.md`) three token types:
+   - **product tokens** — concrete nouns the user used for what they sell (e.g. `SMTP relay`, `cold email tool`, `外贸独立站`)
+   - **ICP tokens** — concrete nouns for who they sell to (e.g. `SaaS 开发者`, `外贸团队负责人`, `solo founders`)
+   - **edge tokens** — keywords from the one-line advantage (e.g. `99.9% deliverability`, `本地化建站`, `5x cheaper`)
+2. Each scenario bullet text MUST contain at least one user token verbatim or as a tight synonym (Chinese ↔ Chinese, English ↔ English; no cross-language translation that the user didn't make).
+3. If you cannot satisfy 3 bullets with this constraint, list only what you can. Open the section with: `上下文还不够丰富，我只敢列 N 条；想要更多就再给我一条产品 / 客户细节 / Context is still thin, so I'm only listing N tailored options; one more detail on product or audience will unlock more.`
+4. **Banned strings** (from the hypothetical example below; never copy verbatim unless the user actually said them): `外贸团队负责人`, `domain warmup`, `SEO 文章`, `sitemap`, `cold email`, `SaaS founders`.
+
+### Language continuity
+
+Continue in the language detected at Phase 1. Do NOT switch to English mid-conversation just because the examples below are in English. Bullet headings must be in the user's language. The English labels in the examples are illustrative only — translate them when writing for a 中文 user.
+
+### Hypothetical example (for a 外贸 SaaS — illustrate the SHAPE, never copy verbatim)
+
+- **起草并发布一篇 SEO 文章** — 比如：为「[ICP token]」写一篇「[product token + 角度]」的 SEO 文章
 - **监控 3 家直接竞品** — 你说 1-3 个对手网址，我每周抓他们 sitemap，推送值得借鉴的新文
 - **审一篇你已有的 landing** — 给我 slug 或 URL，我跑 audit + 给 reviewer brief
 - **从 raw 素材蒸馏 wiki** — 你有 PDF / 截图 / 通话纪要丢进 `raw/`，我帮你提炼成可复用的 `wiki/products/` 或 `wiki/personas/`
 - **先看现状再决定** — 跑一次 `audit_content.py --status .`，你看完再说
 
-If you have fewer than 3 honestly-tailored scenarios, list only what you have. Don't pad with generics.
+If you have fewer than 3 honestly-tailored scenarios, list only what you have. Do not pad with generics.
 
 ## Phase 4: Meta question
 
@@ -121,7 +157,7 @@ SKILL.md → Required Context says "STOP if any `Current Site` field is empty be
 
 ## `wiki/company.md` write contract for first-contact
 
-When Phase 2 produces a confirmed company description, write to `wiki/company.md` with:
+When Phase 2 produces a confirmed company description, write to `wiki/company.md` with the schema documented in `references/corpus-layout.md` § AI-drafted wiki pages. Concretely:
 
 ```yaml
 ---
@@ -152,4 +188,9 @@ drafted_by: first-contact-protocol
 - (left for human follow-up)
 ```
 
-The `trust: ai-drafted, needs_human_review: true` frontmatter is a flag for `library_health.py` and the next agent: this content was bootstrapped, deserves a human pass when there's time. Subsequent edits to `wiki/company.md` should follow normal wiki curation (human-driven, AI assists), not be silently rewritten by another first-contact run.
+**Rules**:
+
+- Remove the `<!-- first-contact: unfilled -->` sentinel from the file when writing — Phase 1 of the next first-contact run uses sentinel-absence to mean "human/AI has touched this".
+- `library_health.py` has a `check_ai_drafted_unreviewed` check that surfaces this file in `audits/library-health-<date>.md` and queues a backlog row until a human confirms.
+- A confirming human read flips `trust: human-verified` and removes `needs_human_review:`. After that, the file follows normal wiki curation.
+- Subsequent edits to `wiki/company.md` should NOT be silently rewritten by another first-contact run — Phase 1 detects `needs_human_review: true` as state A′ and offers the user a confirm-or-restart choice instead of paraphrasing AI content back as ground truth.

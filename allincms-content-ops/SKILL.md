@@ -75,7 +75,11 @@ Before writing or publishing, locate or create the project root and read:
 
 If these files do not exist, run `scripts/init_content_ops_project.py <project-root>` with the required flags (see `--help`).
 
-**Site identity is a hard prerequisite.** If `PROJECT_INDEX.md` → `Current Site` has any empty field (site id, front-end domain, workspace URL, browser profile, default region / language — 5 fields total), STOP and request those values from the user before any other action. Do not proceed with placeholders. The init script (`scripts/init_content_ops_project.py --help`) requires all five as flags so a clean init never writes empties.
+**Site identity is required for actions that write to AllinCMS, publish, capture monitoring, run live site health, or otherwise touch shared/remote state.** If `PROJECT_INDEX.md` → `Current Site` has any empty field (site id, front-end domain, workspace URL, browser profile, default content language — 5 fields total), STOP and request values **before any such action**.
+
+**Not gated on Current Site** (allowed with empty fields): local light-mode edits, `audit_content.py --light`, reading wiki/references/raw, `--status` dashboard, `first-contact.md` Phases 1–4 introduction.
+
+The init script (`scripts/init_content_ops_project.py --help`) requires all five as flags so a clean init never writes placeholders.
 
 For cross-agent use, keep the root entry files thin:
 

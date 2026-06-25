@@ -231,6 +231,34 @@ def check_seo_stale(project_root):
     return issues
 
 
+def check_ai_drafted_unreviewed(project_root):
+    """Flag wiki pages with frontmatter `trust: ai-drafted` + `needs_human_review: true`.
+
+    Created by `first-contact.md` Phase 2 when AI bootstraps `wiki/company.md`
+    (or similar) from a user's 3-line answer / fetched homepage. The flag means
+    "human still needs to read this once" — surface in dashboards so it doesn't
+    rot into pseudo-ground-truth.
+    """
+    issues = []
+    wiki = project_root / "wiki"
+    if not wiki.is_dir():
+        return issues
+    today = _dt.date.today()
+    for md in iter_markdown(wiki):
+        text = md.read_text(encoding="utf-8", errors="ignore")
+        if not re.search(r"^trust:\s*ai-drafted", text, re.M):
+            continue
+        if not re.search(r"^needs_human_review:\s*true", text, re.M):
+            continue
+        age = (today - _dt.date.fromtimestamp(md.stat().st_mtime)).days
+        issues.append({
+            "check": "ai_drafted_unreviewed",
+            "file": str(md.relative_to(project_root)),
+            "age_days": age,
+        })
+    return issues
+
+
 CHECKS = {
     "dead_links": check_dead_links,
     "orphan_raw": check_orphan_raw,
@@ -238,6 +266,7 @@ CHECKS = {
     "copy_overuse": check_copy_overuse,
     "glossary_drift": check_glossary_drift,
     "seo_stale": check_seo_stale,
+    "ai_drafted_unreviewed": check_ai_drafted_unreviewed,
 }
 
 

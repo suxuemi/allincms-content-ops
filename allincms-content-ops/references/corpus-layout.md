@@ -140,6 +140,26 @@ audit:
 
 The full required-field list lives in `markdown-style-guide.md`; `audit_content.py` enforces it. Use `scripts/new_draft.py <slug>` to scaffold instead of hand-writing this block.
 
+## AI-drafted wiki pages
+
+Wiki content is human-curated by default. When `first-contact.md` Phase 2 bootstraps a wiki page from the user's 3-line answer (or a fetched homepage), that page gets these frontmatter fields so the next agent / `library_health.py` can tell it apart from human work:
+
+```yaml
+---
+trust: ai-drafted | human-verified
+needs_human_review: true | false
+drafted_at: YYYY-MM-DD
+drafted_by: first-contact-protocol | <agent-id> | <human-name>
+---
+```
+
+Field rules:
+
+- `trust: ai-drafted` is automatic for first-contact bootstraps; an explicit human read sets it to `human-verified` and removes `needs_human_review`.
+- `needs_human_review: true` is checked by `library_health.py --only ai_drafted_unreviewed`; the entry shows in `audits/library-health-<date>.md` and an `open` row appears in `wiki/backlog.md`.
+- Subsequent edits should NOT silently overwrite an AI-drafted page in a second first-contact run — see `references/first-contact.md` Phase 1 second-entry rule.
+- `audit_content.py` accepts these as legitimate frontmatter (not unknown fields); other scripts should treat them as informational.
+
 ## Index Rules
 
 - `PROJECT_INDEX.md` is the root table of contents and onboarding file.

@@ -62,7 +62,7 @@ FILES = {
     "raw/index.md": "# Raw Index\n\n| Date | Source | Type | Rights | Extracted | Wiki links | Notes |\n|---|---|---|---|---|---|---|\n",
     "raw/competitors/index.md": "# Competitor Raw Index\n\n| Date | Competitor | URL | Change | Topic | Status | Wiki link |\n|---|---|---|---|---|---|---|\n",
     "wiki/index.md": "# Wiki Index\n\n- [Company](company.md)\n- [Glossary](glossary.md)\n- [Lessons](lessons.md) — durable rules (proposed → approved → merged)\n- [Backlog](backlog.md) — TODOs / ideas / questions (no graduation, just pruning)\n- [Copy Library](copy-library.md) — reusable proven snippets (audit-passed only)\n- [Content Opportunities](content-opportunities.md)\n- [LLM Knowledge Base](llm-knowledge-base.md)\n- Search-intent briefs: `briefs/`\n- Products: `products/`\n- Personas: `personas/`\n- Methodology: `methodology/`\n- Competitors: `competitors/`\n- Regions: `regions/`\n",
-    "wiki/company.md": "# Company\n\n## Positioning\n\n## Proof\n\n## Open Questions\n",
+    "wiki/company.md": "<!-- first-contact: unfilled -->\n# Company\n\n## Positioning\n\n## Proof\n\n## Open Questions\n",
     "wiki/glossary.md": "# Glossary\n\n| Term (canonical EN) | 中文 | Definition | Preferred usage |\n|---|---|---|---|\n",
     "wiki/copy-library.md": """# Copy Library
 
