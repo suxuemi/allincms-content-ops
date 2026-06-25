@@ -41,23 +41,33 @@ If the installed skill is git-backed, check for upstream updates first — runni
    - `.git/` absent (user installed via downloaded zip) → tell the user once: `这套 skill 是 zip 装的，没法增量更新。要最新版去 https://github.com/suxuemi/allincms-content-ops 重新下 zip，覆盖 allincms-content-ops/ + 根目录文档（不要动 wiki/ web/ raw/ audits/ monitoring/ media/ PROJECT_INDEX.md）。` Then **skip Phase -1** and continue to Phase 1.
    - Env has no shell capability (claude.ai web etc.) → say so honestly, skip Phase -1, continue to Phase 1.
 
-2. **Dry-run check**: `python3 allincms-content-ops/scripts/update_skill.py --dry-run`. If output reads `skill is up to date` → skip to Phase 1.
+2. **Pin check**: read `.allincms-skill-pin` at project root if present. If `pinned_to:` exists AND the upstream CHANGELOG since the pinned version contains no `security:` marker, silence the upgrade nudge entirely (exit code 12 from script) — continue to Phase 1. Re-evaluate prompt only if `pinned_at` is older than 60 days.
 
-3. **If N commits behind**, surface to the user in the detected language:
-   > skill 有 N 个新提交可用。**更新（推荐）/ 看变更 / 跳过用现在的版本**？
+3. **Dry-run check**: `python3 allincms-content-ops/scripts/update_skill.py --dry-run`. If output reads `skill is up to date` → skip to Phase 1.
 
-   **Wait for the user's explicit pick** — do NOT auto-update. Treating silence as consent is a violation.
+4. **If behind**, surface to the user in the detected language with the **version diff**, not just commit count:
+   > skill 有新版可用：v0.2.0 → v0.3.0 (**minor** — N 项新增 + M 处修复)。**更新（推荐）/ 看 CHANGELOG / 跳过用现在的版本**？
 
-4. **On "更新"** → `python3 allincms-content-ops/scripts/update_skill.py` (no `--dry-run`).
+   If the script output marks a **MAJOR cross** (exit code 10), the prompt MUST be more cautious:
+   > skill 跨 1 个 **MAJOR** 版本 (v0.2.0 → v1.0.0)。这意味着既有草稿可能在新规则下被退、或需要数据迁移。我会贴每段 MAJOR CHANGELOG 给你，请逐段读，确认后用 `--ack-major v1.0.0` 才能应用。**先看每段 CHANGELOG / 取消**？
+
+   **Wait for the user's explicit pick** — do NOT auto-update. Treating silence as consent is a violation. NEVER apply a MAJOR cross without explicit `--ack-major`.
+
+5. **On "更新"** (no MAJOR cross) → `python3 allincms-content-ops/scripts/update_skill.py` (no `--dry-run`).
    - If output contains a `CHANGED-CONTRACT-FILES:` section, list those files to the user, then say:
      > 我刚拉了新版规则，给我 30 秒重读 SKILL.md / references 再继续。
-   - Then **actually Re-Read each listed file** — your cached content is stale and using it will cause contract drift.
+   - Then **actually Re-Read each listed file** — your cached content is stale and will cause contract drift if used.
 
-5. **On "看变更"** → run `git log --oneline HEAD..<remote>/<branch> | head -10`, paste it back, then ask the choice again.
+6. **On "更新" with MAJOR cross** → if user reads each MAJOR CHANGELOG segment and explicitly confirms:
+   - Check each MAJOR section for a `Migration` block. If present and the script referenced doesn't exist yet, STOP and ask the user to follow the manual migration before continuing.
+   - Run `python3 allincms-content-ops/scripts/update_skill.py --ack-major v0.X.0,v0.Y.0` listing the MAJOR versions reviewed.
+   - Same re-read discipline as step 5.
 
-6. **On "跳过"** → log a backlog row: `python3 allincms-content-ops/scripts/note.py "running on skill behind by N commits since <date>" --kind todo --priority low`. Continue to Phase 1.
+7. **On "看 CHANGELOG"** → show the segments between local and upstream version (script output already includes them on MAJOR; for minor/patch run `awk` or grep on `CHANGELOG.md`). Re-ask the choice afterwards.
 
-7. **Mid-session ban**: do NOT run `update_skill.py` later in the same session unless the user explicitly invokes the manual sync prompt. Pulling new contract files mid-run swaps SKILL.md / references/* under your feet and any in-flight workflow breaks. Phase -1 is the only legitimate sync point.
+8. **On "跳过"** → log a backlog row: `python3 allincms-content-ops/scripts/note.py "running on skill behind: <local_v> vs <upstream_v> since <date>" --kind todo --priority low`. Continue to Phase 1.
+
+9. **Mid-session ban**: do NOT run `update_skill.py` later in the same session unless the user explicitly invokes the manual sync prompt. Pulling new contract files mid-run swaps SKILL.md / references/* under your feet and any in-flight workflow breaks. Phase -1 is the only legitimate sync point.
 
 ## Phase 1: Context probe (silent — at most one short user-facing line)
 
