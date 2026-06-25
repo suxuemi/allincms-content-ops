@@ -32,6 +32,33 @@ Do NOT default to PROJECT_INDEX `Default content language` — that's site-wide,
 
 ---
 
+## Phase -1: Skill sync (BEFORE reading SKILL.md or anything else, ONCE per session)
+
+If the installed skill is git-backed, check for upstream updates first — running on stale rules wastes everyone's time. This phase runs **once per session, before Phase 1, before SKILL.md is read in earnest**.
+
+1. **Detect installation type**:
+   - `.git/` present in the skill root and the remote URL contains `suxuemi/allincms-content-ops` (or a known fork) → continue to step 2.
+   - `.git/` absent (user installed via downloaded zip) → tell the user once: `这套 skill 是 zip 装的，没法增量更新。要最新版去 https://github.com/suxuemi/allincms-content-ops 重新下 zip，覆盖 allincms-content-ops/ + 根目录文档（不要动 wiki/ web/ raw/ audits/ monitoring/ media/ PROJECT_INDEX.md）。` Then **skip Phase -1** and continue to Phase 1.
+   - Env has no shell capability (claude.ai web etc.) → say so honestly, skip Phase -1, continue to Phase 1.
+
+2. **Dry-run check**: `python3 allincms-content-ops/scripts/update_skill.py --dry-run`. If output reads `skill is up to date` → skip to Phase 1.
+
+3. **If N commits behind**, surface to the user in the detected language:
+   > skill 有 N 个新提交可用。**更新（推荐）/ 看变更 / 跳过用现在的版本**？
+
+   **Wait for the user's explicit pick** — do NOT auto-update. Treating silence as consent is a violation.
+
+4. **On "更新"** → `python3 allincms-content-ops/scripts/update_skill.py` (no `--dry-run`).
+   - If output contains a `CHANGED-CONTRACT-FILES:` section, list those files to the user, then say:
+     > 我刚拉了新版规则，给我 30 秒重读 SKILL.md / references 再继续。
+   - Then **actually Re-Read each listed file** — your cached content is stale and using it will cause contract drift.
+
+5. **On "看变更"** → run `git log --oneline HEAD..<remote>/<branch> | head -10`, paste it back, then ask the choice again.
+
+6. **On "跳过"** → log a backlog row: `python3 allincms-content-ops/scripts/note.py "running on skill behind by N commits since <date>" --kind todo --priority low`. Continue to Phase 1.
+
+7. **Mid-session ban**: do NOT run `update_skill.py` later in the same session unless the user explicitly invokes the manual sync prompt. Pulling new contract files mid-run swaps SKILL.md / references/* under your feet and any in-flight workflow breaks. Phase -1 is the only legitimate sync point.
+
 ## Phase 1: Context probe (silent — at most one short user-facing line)
 
 Before listing anything, open these in order and classify:

@@ -92,6 +92,7 @@ All three must point back to this skill and the same `PROJECT_INDEX.md`. Do not 
 ## Workflow
 
 0. Sweep lessons (both modes, very first action).
+   - If `first-contact.md` Phase -1 just pulled new contract files this turn (the `update_skill.py` output included a `CHANGED-CONTRACT-FILES:` section), **re-read** those files before sweeping. The sweep rules themselves may have changed.
    - `grep -nE "^\s*status:\s*approved" wiki/lessons.md` (or open and read).
    - For each `approved` entry: apply the rule into its `proposed_destination`, change status to `merged`, append `merge_note` with the commit hash or diff path.
    - If the destination edit is non-trivial, surface to user before merging; do not silently drop the entry.
@@ -197,7 +198,8 @@ All three must point back to this skill and the same `PROJECT_INDEX.md`. Do not 
 - `scripts/review_capture.py`: review AI suggestions in a capture — per-suggestion `--accept | --reject | --needs-edit`, or `--inbox` for a markdown checklist of all pending across captures. Rejected suggestions mirror to `wiki/anti-patterns.md`.
 - `references/monitoring-system.md`: full schema and lifecycle for the monitoring layer (capture frontmatter, trust boundary, dedup keys, AI section markers, anti-patterns).
 - `references/feedback-loop.md`: capture protocol the agent MUST run at end of every full-mode session (Workflow step 9).
-- `references/first-contact.md`: introduction + guidance protocol the agent runs on first contact (when invoked via the README "Use with AI" prompt). Read-only; exempt from the `Current Site` STOP gate.
+- `references/first-contact.md`: introduction + guidance protocol the agent runs on first contact (when invoked via the README "Use with AI" prompt). Read-only; exempt from the `Current Site` STOP gate. Includes `Phase -1: Skill sync` for freshness check.
+- `scripts/update_skill.py`: pull latest skill from upstream while preserving project content (canonical or surgical mode auto-detected); emits `CHANGED-CONTRACT-FILES:` so the agent knows to re-read.
 - `scripts/sitemap_diff.py`: fetch each competitor's `sitemap.xml`, diff against the last snapshot, write a dated diff file under `monitoring/runs/sitemap/`, and (optionally) append new URLs as `proposed` opportunities.
 - `references/prompt-templates.md`: copy-paste prompts for persona extraction, search-intent brief, outline, competitor distillation, alt text, and lesson proposal.
 - `references/content-system-tables.md`: four-table model — knowledge / competitors / opportunities / copy library — with cadence and write-authority rules.

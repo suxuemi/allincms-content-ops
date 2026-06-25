@@ -32,6 +32,14 @@ https://github.com/suxuemi/allincms-content-ops
 
 > 想跳过启发式、直接给 AI 一个具体任务？见 [INSTALL.md](INSTALL.md) 的"直给任务版"。
 
+> **已经装过想拉最新版**？把这段贴给 AI：
+> ```
+> 帮我把这套已经装好的 skill 拉到最新版：
+> cd ~/skills/allincms-content-ops
+> python3 allincms-content-ops/scripts/update_skill.py
+> ```
+> AI 会跑 dry-run、列变更、问你要不要更新；同意后真更新；拉到的新 SKILL.md / references 会被 AI 重读后再按新规则继续。冲突或异常（detached HEAD、本地未推送的 skill commit、网络不通）会停下来报错，不会硬上覆盖你的内容。
+
 ## 主要目录
 
 - [raw/index.md](raw/index.md)：原始素材 + 抽取后的 Markdown。

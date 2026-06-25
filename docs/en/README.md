@@ -30,6 +30,14 @@ Clone under ~/skills (don't pollute my current project), then read allincms-cont
 
 > Want to skip the heuristic intro and hand the AI a specific task directly? See [INSTALL.md](../../INSTALL.md) → "task-first variant".
 
+> **Already installed; need the latest version?** Paste this to the AI:
+> ```
+> Update this already-installed skill to the latest version:
+> cd ~/skills/allincms-content-ops
+> python3 allincms-content-ops/scripts/update_skill.py
+> ```
+> The AI will dry-run, show diffs, and wait for your OK before applying. Newly pulled `SKILL.md` / `references/*` are re-read by the AI before any further action. Conflicts (detached HEAD, unpushed local skill commits, no network) abort cleanly without overwriting your content.
+
 ## Main Folders
 
 - [raw/index.md](../../raw/index.md): original source material and extracted Markdown.
