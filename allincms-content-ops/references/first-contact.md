@@ -38,14 +38,64 @@ A newbie cloning the repo doesn't know which dependencies are missing until they
 
 Look for `.doctor-cache.json` at project root.
 
-- Missing OR older than 24 hours → run `python3 allincms-content-ops/scripts/doctor.py .`. Report the result categories `strong / degraded / missing` to the user (do not paraphrase — show the actual line so the user can read the remediation link).
-- Present and fresh → skip the run; just summarize.
+- Missing OR older than 24 hours → run `python3 allincms-content-ops/scripts/doctor.py .`.
+- Present and fresh → skip the run; reuse the cache.
 
-If doctor exits 2 (critical missing — git / python), STOP and surface the remediation. Phase -1 and beyond depend on git.
+**Translation to the user (don't paraphrase the raw tier output — translate it)**. The user doesn't know what `strong / degraded / missing` means for their actual ability to publish a page today. Use the `user_facing_phrasing` column in `references/tooling-matrix.md` — every (tier × category) cell has a one-line user-facing line. Concatenate the non-strong lines into the preamble (Phase 0 below); skip strong cells entirely (no news is good news).
 
-If doctor exits 1 (publish-required missing — Current Site fields empty etc.), continue to Phase -1 but flag that publishing will block later.
+Exit codes (script-level — these are for AI's flow control, not for user-facing display):
 
-If doctor exits 0, proceed to Phase -1.
+- Exit 2 (critical missing — git / python): STOP, surface the remediation. Phase -1 and beyond depend on git.
+- Exit 1 (publish-required missing — Current Site fields empty etc.): continue to Phase -1 but the preamble in Phase 0 must mention "发布前要补".
+- Exit 0: proceed to Phase -1.
+
+## Phase 0: Preamble (FIRST user-facing message — ≤ 3 lines)
+
+Once Phase -2 and Phase -1 finish, the AI's **first user-facing message** must be ≤ 3 lines plus an optional "details on demand" exit. Shape:
+
+```
+✓ 装好了 (v<local-version> @ <short-sha> · SKILL.md + first-contact.md)
+✓ 现在能做：<comma-list translated from strong-tier doctor cells>
+⚠ 想做 X 要装 Y：<degraded-tier translated lines, max 2>
+✗ 发布前要补：<missing-tier translated lines, max 2>
+（详细诊断: python3 allincms-content-ops/scripts/doctor.py -v）
+```
+
+Rules:
+
+- Show **at most 3 substantive lines** above the `(详细诊断)` line; if more, fold into "and N more, see -v".
+- Always include the `(v<…> @ <…> · <contracts>)` anchor on line 1 — pin users need to verify which contract you're running.
+- Drop "已读取" verbs and self-check narration ("没有 rm -rf"). These are AI behaviors, not user signals.
+- After this message, go directly to the first Phase 2 question. **No "现在按 first-contact 进 Phase 2" handoff line**.
+
+### Self-check before sending Phase 0
+
+Before sending the Phase 0 message, scan your own text for these banned phrases. If any appear, rewrite:
+
+- `现在按 first-contact …`
+- `进入 Phase …`
+- `按 first-contact 协议 …`
+- `协议要求 …`
+- `已读取 SKILL.md 和 …` (the verb `已读取` — keep the file names on the anchor line, drop the verb)
+
+These are runtime behavior leaks. The user doesn't need to know what protocol the AI is running.
+
+### Don't narrate the protocol (general rule for the whole session)
+
+Throughout the session — not just Phase 0 — **never narrate protocol mechanics to the user**. The protocol is AI's internal state, not the user's concern.
+
+**禁止报告**: which Phase you're in, which reference you're reading, what the protocol's next step is, "according to first-contact", "Workflow step 3 requires…".
+
+**必须报告** (whitelist — always tell the user):
+
+- writing or modifying a file
+- changing wiki content (lessons, backlog, copy-library)
+- installing a dependency
+- running `git push`, `git tag`, modifying `.gitignore` / settings.json
+- spawning a subagent (so the user knows a tool call is being made)
+- crossing a Hard Gate (and what specifically blocked)
+
+The user should feel like they're talking to someone competent, not someone reciting a script.
 
 ## Phase -1: Skill sync (BEFORE reading SKILL.md or anything else, ONCE per session)
 
@@ -146,6 +196,32 @@ Offer two paths and **explicitly ask permission** before any network action:
 
 If 2 chosen → ask the 3 questions **one message at a time** (don't dump a form). After all three answers, draft `wiki/company.md` content with the same frontmatter. Show verbatim, wait for OK before writing.
 
+### Progress hint on every question (Phase 2 Path C, Phase 2.5, Phase 2 Path B-2)
+
+Every question that's part of a fixed-N sequence MUST show progress and scope. Shape:
+
+```
+（{X}/{N}）{question}? {one-line scope: what to answer, what's coming next}
+```
+
+**N formula** (compute from Phase -2 doctor cache + Path):
+
+- Path C / B-2 base = 3 (卖什么 / 给谁 / 一句话优势)
+- Plus: each empty `Current Site` field reported by doctor as missing (e.g. Browser profile) adds 1
+- Plus: Phase 2.5 if triggered adds 1 (ingest offer)
+
+Worked example: doctor reports Current Site missing 1 field (Browser profile), Phase 2 is Path C, Phase 2.5 will trigger after → **N = 3 + 1 + 1 = 5**.
+
+First Path C question becomes:
+
+```
+（1/5）你公司主要卖什么？产品名 / 服务类别一句话就好。后面我会问你给谁卖、跟同行差在哪、补一个 Browser profile 字段，最后看你有没有 PDF/PPT 想丢进来一起蒸馏。
+```
+
+The user sees: 4 more questions coming, each one-line, knows what each is for. Trust + control.
+
+If N changes mid-sequence (e.g. doctor was missing a field but user just filled it via Phase 2 answer), **recompute and tell the user**: `（其实 4/4 就够了 — 你已经把 Browser profile 答了。继续：）`.
+
 ### Path C — Cold
 
 Skip the choice — just ask the 3 questions directly. Same write-with-confirmation flow as Path B-2.
@@ -240,6 +316,8 @@ After user picks:
 - Don't reply in English to a Chinese-speaking user (or vice versa).
 - Don't claim the seeded `lessons.md` / `backlog.md` / sample audit are problems with the user's project.
 - Don't skip the **Skip clause** at the top — if user pasted a concrete task, just do the task.
+- Don't narrate the protocol (see Phase 0 § Don't narrate the protocol). The user shouldn't see Phase numbers, reference filenames being read, or "according to first-contact"-style breadcrumbs.
+- Don't paraphrase raw doctor tiers. Use the `user_facing_phrasing` column from `tooling-matrix.md`.
 
 ## Exemption from `Current Site` STOP
 

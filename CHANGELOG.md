@@ -6,6 +6,37 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.6.0] — 2026-06-26
+
+UX texture refinement driven by a real-run screenshot. v0.5 shipped doctor + check_draft + examples; a user immediately ran the install prompt and the screenshot showed the AI's first message was 8 lines of dense Chinese including paths / SHAs / "已读 X 和 Y" / "现在按 first-contact 进入 Phase 2" — technically correct, but heavy on the newbie. v0.6 fixes the texture without touching contract.
+
+> Note: 首屏从 8 行压到 3 行是有意的。装没装好用 `python3 allincms-content-ops/scripts/doctor.py -v` 看长版。
+
+Codex round: [audits/codex-rounds/v0.6.0-r1.md](audits/codex-rounds/v0.6.0-r1.md) (7 findings; 2 high / 3 med / 2 low; all applied).
+
+### Added
+
+- `first-contact.md` § **Phase 0: Preamble** — the AI's first user-facing message now has a contract: ≤ 3 substantive lines + 1-line "details on demand" exit. Shape: `✓ 装好了 (v<X.Y.Z> @ <sha> · SKILL.md + first-contact.md) / ✓ 现在能做：… / ⚠ 想做 X 要装 Y / ✗ 发布前要补：…`. Drops self-check narration ("已读取", "没有 rm -rf"); keeps version anchor (Fclassification.1).
+- `first-contact.md` § **Self-check before sending Phase 0** — 5 banned phrases (`现在按 first-contact …` / `进入 Phase …` / `按 first-contact 协议 …` / `协议要求 …` / `已读取 SKILL.md 和 …`). AI scans its own first message before sending.
+- `first-contact.md` § **Don't narrate the protocol** — applies session-wide, with explicit **必须报告** whitelist (writing files / changing wiki / installing dependencies / running git push / spawning subagent / crossing Hard Gate) so silence doesn't hide legitimate side effects (Fclassification.2).
+- `first-contact.md` Phase 2 / 2.5 § **Progress hint** — every fixed-N question now shows `（X/N）` plus a one-line scope hint plus what's coming next. N is computed dynamically: `N = 3 + (Current Site empty fields from doctor) + (Phase 2.5 triggered ? 1 : 0)` with a worked example (Ffalsifiability.2).
+- `tooling-matrix.md` new section: **Doctor → user-facing phrasing** — single-source translation table (tier × category → user_facing_phrasing line). Rejected creating `doctor-translation.md` per Fprocess.1 (avoid double source).
+- `audits/protocol-leak-samples.md` — per-release real-screenshot samples annotated for protocol-narration leaks. Compensates for the unfalsifiable "don't narrate" rule (Ffalsifiability.1): periodic sampling catches what grep can't. Seeded with the v0.5 leak baseline.
+- `audit_skill_meta.py`: 10 new regression entries covering Phase 0, banned phrases, don't-narrate, must-report whitelist, progress formula, tooling-matrix user-phrasing column, leak samples baseline.
+
+### Changed
+
+- `first-contact.md` Phase -2: stopped instructing AI to "report the raw `strong/degraded/missing` tier lines verbatim" — that produced the v0.5 wall of text. Now Phase -2's job is to fill `.doctor-cache.json`; Phase 0 owns the user-facing translation using `tooling-matrix.md` `user_facing_phrasing` column.
+- `first-contact.md` Don'ts list expanded: "Don't narrate the protocol", "Don't paraphrase raw doctor tiers".
+
+### Migration
+
+(none — additive only.)
+
+For v0.5 users who depended on the 8-line preamble for verification ("I see 8 lines, AI is doing the right thing"): the version anchor on line 1 (`✓ 装好了 (vX.Y.Z @ <sha> · SKILL.md + first-contact.md)`) is your replacement signal — same trust, less noise. If you want the full long version of the diagnostic, run `python3 allincms-content-ops/scripts/doctor.py -v`.
+
+[0.6.0]: https://github.com/suxuemi/agently-mail/releases/tag/v0.6.0
+
 ## [0.5.0] — 2026-06-26
 
 Newbie first-mile optimization. v0.4 had real-use bugs fixed; v0.5 addresses the bigger friction — newbies were never reaching their first publish because of cascading "didn't know I had to install X" / "didn't know what to fill in" failures.
@@ -121,5 +152,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.6.0...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

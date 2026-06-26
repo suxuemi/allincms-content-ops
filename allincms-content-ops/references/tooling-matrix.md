@@ -43,6 +43,23 @@ A row graduates from "designed-for" to "verified" only after the verification pr
 
 If your host lacks a "**bold**" capability for a step you need, stop and hand off. Do not fake the step.
 
+## Doctor → user-facing phrasing (single source for first-contact Phase 0)
+
+When `doctor.py` reports a non-strong cell, the AI uses the `user_facing_phrasing` column below — not the raw tier name. **Strong cells produce no line** (no news is good news).
+
+| Capability | tier × category | user_facing_phrasing |
+|---|---|---|
+| `git` | missing × critical | `先装 git 才能跑这套 skill — https://git-scm.com/downloads` |
+| `python` | missing × critical | `Python 至少要 3.9，升级一下再继续` |
+| `pdftotext` | degraded × ingest | `想丢 PDF 给我得装 pdftotext (brew install poppler / apt install poppler-utils)，现在跳过没事` |
+| `pandoc` | degraded × ingest | `想丢 Word / PPT 给我得装 pandoc (brew install pandoc / apt install pandoc)，现在跳过没事` |
+| `picgo` | degraded × media | `想批量上传图片要先打开 PicGo 桌面端（Settings → PicGo-Server 开启）` |
+| `current_site` | missing × publish | `发布前要补 Current Site 字段：{missing-fields}` |
+| `published_index` | degraded × internal_links | `还没发过文章，内链建议会是空的（第一篇发完就有了）` |
+| `version_file` | missing × version | `VERSION 文件没了，重新装一次 skill` |
+
+Maintainer: when adding a new `doctor.py` check, add the row here in the same PR. Keeping translation in `tooling-matrix.md` (single source) prevents drift with a separate `doctor-translation.md` (rejected in v0.6.0-r1 Fprocess.1).
+
 ## Verification protocol
 
 To add a new "verified" row:

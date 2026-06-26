@@ -17,6 +17,58 @@ from pathlib import Path
 
 
 CHECKS = {
+    # Codex round v0.6.0-r1 (UX texture from real-run screenshot)
+    "first-contact-phase-0-preamble": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"Phase 0: Preamble",
+        "intent": "first user-facing message contract is documented as a phase, not implicit",
+    },
+    "first-contact-self-check-banned-phrases": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"Self-check before sending Phase 0",
+        "intent": "banned-phrase self-check section exists; falsifiability of don't-narrate rule",
+    },
+    "first-contact-dont-narrate-section": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"Don't narrate the protocol",
+        "intent": "general don't-narrate rule covers the whole session, not just Phase 0",
+    },
+    "first-contact-narrate-whitelist": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"必须报告",
+        "intent": "whitelist prevents over-fitting silence to breaking changes (Fclassification.2)",
+    },
+    "first-contact-progress-formula": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"N formula",
+        "intent": "X/N progress is dynamic; formula prevents AI from inventing N (Ffalsifiability.2)",
+    },
+    "tooling-matrix-user-phrasing-column": {
+        "file": "allincms-content-ops/references/tooling-matrix.md",
+        "pattern": r"user_facing_phrasing",
+        "intent": "translation lives in tooling-matrix single source (Fprocess.1 chose against new file)",
+    },
+    "tooling-matrix-doctor-translation-rows": {
+        "file": "allincms-content-ops/references/tooling-matrix.md",
+        "pattern": r"missing × publish",
+        "intent": "tooling-matrix has at least the doctor.py categories represented",
+    },
+    "protocol-leak-samples-file": {
+        "file": "audits/protocol-leak-samples.md",
+        "pattern": r"Protocol Leak Samples",
+        "intent": "per-release sample of real first-message + leak annotations",
+    },
+    "protocol-leak-samples-v05-baseline": {
+        "file": "audits/protocol-leak-samples.md",
+        "pattern": r"Sample 1.*v0\.5\.0",
+        "intent": "v0.5 leak baseline preserved (regression diff source)",
+    },
+    "codex-round-v060": {
+        "file": "audits/codex-rounds/v0.6.0-r1.md",
+        "pattern": r"Codex Round v0\.6\.0-r1",
+        "intent": "v0.6.0 codex round persisted to disk",
+    },
+
     # Codex round v0.5.0-r1 (newbie first-mile)
     "doctor-script": {
         "file": "allincms-content-ops/scripts/doctor.py",
