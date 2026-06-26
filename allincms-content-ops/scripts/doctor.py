@@ -66,16 +66,84 @@ def check_python():
     return "strong", f"python {v.major}.{v.minor}.{v.micro}", f"{TM_ANCHOR}#python"
 
 
-def check_pdftotext():
-    if not shutil.which("pdftotext"):
-        return "degraded", "missing pdftotext (poppler-utils). Workaround: convert PDFs to .md manually before ingest. To install: brew install poppler / apt install poppler-utils", f"{TM_ANCHOR}#pdf-extraction"
-    return "strong", "pdftotext present (PDFs ingest automatically)", f"{TM_ANCHOR}#pdf-extraction"
+def _has_markitdown():
+    if shutil.which("markitdown"):
+        return True
+    # check Python-installed flag
+    try:
+        import importlib.util
+        return importlib.util.find_spec("markitdown") is not None
+    except Exception:
+        return False
 
 
-def check_pandoc():
-    if not shutil.which("pandoc"):
-        return "degraded", "missing pandoc (Word/PPT → md). Workaround: export to .md manually. To install: brew install pandoc / apt install pandoc", f"{TM_ANCHOR}#docx-pptx-extraction"
-    return "strong", "pandoc present (.docx/.pptx ingest automatically)", f"{TM_ANCHOR}#docx-pptx-extraction"
+def _has_paddleocr():
+    try:
+        import importlib.util
+        return importlib.util.find_spec("paddleocr") is not None
+    except Exception:
+        return False
+
+
+def _has_legacy_cli():
+    return bool(shutil.which("pdftotext") and shutil.which("pandoc"))
+
+
+def check_extraction():
+    """ANY-of: markitdown OR (pdftotext + pandoc). Default chain is markitdown."""
+    if _has_markitdown():
+        if _has_legacy_cli():
+            return "strong", "markitdown installed (default) + pdftotext/pandoc available as fast-path", f"{TM_ANCHOR}#extraction"
+        return "strong", "markitdown installed (default extractor — covers PDF/Word/PPT/Excel)", f"{TM_ANCHOR}#extraction"
+    if _has_legacy_cli():
+        return "strong", "pdftotext + pandoc available (legacy fast-path; consider `pipx install markitdown` to also cover Excel)", f"{TM_ANCHOR}#extraction"
+    return "degraded", "no extractor installed. Recommended: `pipx install markitdown` (covers PDF/Word/PPT/Excel). Legacy fast-path: `brew install poppler pandoc`.", f"{TM_ANCHOR}#extraction"
+
+
+def check_chinese_ocr():
+    """OPTIONAL category. Default = strong (silent) regardless of installed state.
+
+    Per codex round v0.8.0-r1 Fclass.1: PaddleOCR is ~1 GB of model deps; doctor
+    should NOT push users toward it unless they actually hit an image / scanned
+    PDF that needs OCR. ingest_sources.py surfaces the install hint per-file
+    when needed, not here.
+    """
+    if _has_paddleocr():
+        return "strong", "paddleocr installed (Chinese image / scanned PDF OCR available)", f"{TM_ANCHOR}#chinese-ocr"
+    return "strong", "paddleocr not installed (optional — install only if you have image inputs)", f"{TM_ANCHOR}#chinese-ocr"
+
+
+def check_media_uploader(project_root):
+    """Either R2 configured OR PicGo running → strong. Both missing → degraded."""
+    r2_configured = (Path.home() / ".config" / "allincms-content-ops" / "r2.toml").is_file()
+    picgo_running = False
+    try:
+        with socket.create_connection(("127.0.0.1", 36677), timeout=1):
+            picgo_running = True
+    except OSError:
+        pass
+    if r2_configured and picgo_running:
+        return "strong", "R2 configured + PicGo running (both available)", f"{TM_ANCHOR}#media-uploader"
+    if r2_configured:
+        return "strong", "R2 configured (~/.config/allincms-content-ops/r2.toml)", f"{TM_ANCHOR}#media-uploader"
+    if picgo_running:
+        return "strong", "PicGo server reachable at 127.0.0.1:36677", f"{TM_ANCHOR}#media-uploader"
+    return "degraded", "no image host configured. Pick one: `scripts/r2_setup.py` (Cloudflare R2) OR launch PicGo desktop app.", f"{TM_ANCHOR}#media-uploader"
+
+
+def check_media_mix(project_root):
+    """Warn if media/index.md uses ≥ 2 distinct image-host domains."""
+    p = project_root / "media" / "index.md" if project_root else None
+    if not p or not p.is_file():
+        return "strong", "media/index.md not present yet", f"{TM_ANCHOR}#media-mix"
+    import re as _re
+    text = p.read_text(encoding="utf-8", errors="ignore")
+    hosts = set()
+    for m in _re.finditer(r"https?://([^/\s|)]+)/", text):
+        hosts.add(m.group(1))
+    if len(hosts) >= 2:
+        return "degraded", f"media/index.md mixes {len(hosts)} image-host domains ({', '.join(sorted(hosts))}). See references/media-pipeline.md — pick one host per project.", f"{TM_ANCHOR}#media-mix"
+    return "strong", f"media/index.md uses {len(hosts) or 0} image host(s) — no mix", f"{TM_ANCHOR}#media-mix"
 
 
 def check_picgo():
@@ -126,9 +194,10 @@ def check_version_file(project_root):
 CHECKS = [
     ("git",            "critical",         check_git),
     ("python",         "critical",         check_python),
-    ("pdftotext",      "ingest",           check_pdftotext),
-    ("pandoc",         "ingest",           check_pandoc),
-    ("picgo",          "media",            check_picgo),
+    ("extraction",     "ingest",           check_extraction),
+    ("chinese_ocr",    "optional",         check_chinese_ocr),
+    ("media_uploader", "media",            lambda pr=None: check_media_uploader(pr)),
+    ("media_mix",      "media",            lambda pr=None: check_media_mix(pr)),
     ("current_site",   "publish",          lambda pr=None: check_current_site(pr)),
     ("published_index","internal_links",   lambda pr=None: check_published_index(pr)),
     ("version_file",   "version",          lambda pr=None: check_version_file(pr)),
@@ -140,6 +209,7 @@ def main():
     parser.add_argument("project_root", nargs="?", default=".")
     parser.add_argument("--json", action="store_true", help="output machine-readable JSON")
     parser.add_argument("--no-cache", action="store_true", help="do not write .doctor-cache.json")
+    parser.add_argument("--refresh", action="store_true", help="ignore existing cache and re-run all checks")
     args = parser.parse_args()
 
     project_root = find_project_root(args.project_root) or Path(args.project_root).expanduser().resolve()
@@ -202,6 +272,7 @@ def main():
         except Exception:
             pass
 
+    # `optional` category never blocks. critical → exit 2; publish-blocking → 1.
     critical_miss = sum(1 for r in results if r['tier'] == 'missing' and r['category'] == 'critical')
     if critical_miss:
         return 2

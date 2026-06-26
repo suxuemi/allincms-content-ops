@@ -34,7 +34,31 @@ If env supports browser automation, use system's default profile. Don't ask. Onl
 
 ## Step 3 — Open workspace_url
 
-Open the URL in the connected browser tool. Detect outcome with **≥ 2 independent signals** (URL pattern + DOM selector + page title — any two):
+### Browser selection per host (added v0.8.0)
+
+The AI must pick a browser tool. Per codex round v0.8.0-r1 Fproc.2, host detection by environment-variable guess is fragile — switch to **explicit confirm before launching**:
+
+```
+我打算用 <browser>，依据是 <signal>。
+30 秒内回车确认，或输入 'manual' 让我给你 URL 自己开。
+```
+
+Then wait for the user's reply.
+
+| Host | Primary browser | Fallback if primary fails |
+|---|---|---|
+| Codex CLI | Codex built-in preview tool | shell + system Chrome |
+| Claude Code | Chrome MCP / Claude in Chrome / Control Chrome MCP | shell + Playwright |
+| Cursor | shell + system Chrome (no built-in browser) | manual — give user the URL |
+| Cline / Aider | usually no browser tool | manual |
+| claude.ai web | **discovery cannot run** — env has no browser at all; fall back to v0.7 ask-4-values path |
+| Unknown host | **manual: give the user the URL, ask them to open it, then paste back the rendered HTML or the page title + a sample of links so AI can parse with Step 4 logic** |
+
+Cookie note: Codex's built-in browser session may not share login cookies with the user's system Chrome. If Step 3 hits a login wall using the built-in browser, the AI should offer one switch: `我这边的内置浏览器没登录态，要不你在系统 Chrome 登一下，然后告诉我 site_id / 前台域名？`. Don't loop — go to manual fallback.
+
+### Detect outcome
+
+Open the URL in the selected browser tool. Detect outcome with **≥ 2 independent signals** (URL pattern + DOM selector + page title — any two):
 
 | Outcome | Signals (any 2 → confirmed) |
 |---|---|

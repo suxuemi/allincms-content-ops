@@ -77,8 +77,83 @@ def run_converter(command):
     return proc.stdout
 
 
+# Extraction fallback constants. See references/ocr-strategy.md and
+# tests/test_doctor_extraction_matrix.py for the ground-truth fixtures.
+# Median chars in short_pdfs/ fixture set is 187; 100 catches roughly the
+# bottom 30% as "real bad extractions". The dual gate prevents misfires
+# on legitimately short inputs (e.g. a 1-page receipt PDF).
+EXTRACTION_MIN_CHARS = 100
+INPUT_SUBSTANTIAL_BYTES = 50_000
+
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+MARKITDOWN_EXTS = {".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls"}
+
+
+def try_markitdown(path):
+    """Run the markitdown CLI (Microsoft, pip install markitdown)."""
+    return run_converter(["markitdown", str(path)])
+
+
+def try_paddleocr_image(path):
+    """OCR a single image using PaddleOCR (Python API)."""
+    try:
+        from paddleocr import PaddleOCR  # type: ignore
+    except ImportError:
+        return None
+    try:
+        ocr = PaddleOCR(use_angle_cls=True, lang="ch", show_log=False)
+        result = ocr.ocr(str(path), cls=True)
+        if not result or not result[0]:
+            return None
+        return "\n".join(line[1][0] for line in result[0] if line and line[1])
+    except Exception:
+        return None
+
+
+def try_paddleocr_pdf(path):
+    """OCR an image-based PDF: pdf2image → PaddleOCR per page."""
+    try:
+        from pdf2image import convert_from_path  # type: ignore
+    except ImportError:
+        return None
+    try:
+        pages = convert_from_path(str(path), dpi=200)
+    except Exception:
+        return None
+    if not pages:
+        return None
+    chunks = []
+    for i, page in enumerate(pages):
+        # save temp PNG, OCR it
+        import tempfile as _tmp
+        with _tmp.NamedTemporaryFile(suffix=".png", delete=False) as f:
+            page.save(f.name, "PNG")
+            tmp_path = Path(f.name)
+        try:
+            text = try_paddleocr_image(tmp_path)
+            if text:
+                chunks.append(f"--- page {i + 1} ---\n{text}")
+        finally:
+            tmp_path.unlink(missing_ok=True)
+    return "\n\n".join(chunks) if chunks else None
+
+
+def preserve_raw(path, tool, text):
+    """Save tool-specific raw output to .raw/ directory beside source."""
+    raw_dir = path.parent / ".raw"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    (raw_dir / f"{path.stem}.{tool}.md").write_text(text, encoding="utf-8")
+
+
 def extract_file(path):
+    """Returns extracted markdown text. Logs which tool produced it via the
+    accompanying preserve_raw() side-effect; consumer can attach an
+    extraction_log entry to the manifest if desired.
+    """
     suffix = path.suffix.lower()
+    size_bytes = path.stat().st_size if path.is_file() else 0
+
+    # Text inputs (.md, .txt, .html) — no extraction needed
     if suffix in TEXT_EXTS:
         text = path.read_text(encoding="utf-8", errors="ignore")
         if suffix in {".html", ".htm"}:
@@ -86,16 +161,45 @@ def extract_file(path):
             parser.feed(text)
             return parser.text()
         return text
-    if suffix == ".pdf":
-        out = run_converter(["pdftotext", str(path), "-"])
-        if out:
-            return out
-        return "__EXTRACTOR_MISSING__:pdftotext (brew install poppler / apt install poppler-utils) OR convert to .md manually and re-run"
-    if suffix in {".docx", ".doc", ".pptx", ".ppt"}:
-        out = run_converter(["pandoc", str(path), "-t", "markdown"])
-        if out:
-            return out
-        return f"__EXTRACTOR_MISSING__:pandoc (brew install pandoc / apt install pandoc) OR convert {suffix} to .md manually and re-run"
+
+    # Image inputs — go straight to PaddleOCR (no markitdown path makes sense)
+    if suffix in IMAGE_EXTS:
+        text = try_paddleocr_image(path)
+        if text:
+            preserve_raw(path, "paddleocr", text)
+            return text
+        return "__EXTRACTOR_MISSING__:paddleocr (pip install paddleocr paddlepaddle) — image OCR fallback required"
+
+    # Document inputs — markitdown first
+    if suffix in MARKITDOWN_EXTS:
+        md_out = try_markitdown(path)
+        if md_out:
+            preserve_raw(path, "markitdown", md_out)
+            # Dual gate: only fall back to OCR when input is substantial AND output is thin
+            if size_bytes > INPUT_SUBSTANTIAL_BYTES and len(md_out.strip()) < EXTRACTION_MIN_CHARS:
+                # Thin output on substantial input — try PaddleOCR
+                if suffix == ".pdf":
+                    ocr_out = try_paddleocr_pdf(path)
+                    if ocr_out:
+                        preserve_raw(path, "paddleocr", ocr_out)
+                        # Use whichever is longer
+                        return ocr_out if len(ocr_out) > len(md_out) else md_out
+            return md_out
+
+        # markitdown not installed — fall back to legacy CLI
+        if suffix == ".pdf":
+            out = run_converter(["pdftotext", str(path), "-"])
+            if out:
+                preserve_raw(path, "pdftotext", out)
+                return out
+            return "__EXTRACTOR_MISSING__:install markitdown (`pip install markitdown`) OR pdftotext (brew install poppler) OR convert to .md manually"
+        if suffix in {".docx", ".doc", ".pptx", ".ppt"}:
+            out = run_converter(["pandoc", str(path), "-t", "markdown"])
+            if out:
+                preserve_raw(path, "pandoc", out)
+                return out
+            return f"__EXTRACTOR_MISSING__:install markitdown (`pip install markitdown`) OR pandoc (brew install pandoc) OR convert {suffix} to .md manually"
+
     return ""
 
 

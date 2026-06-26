@@ -39,8 +39,8 @@ This is the root index for the AllinCMS content operations kit.
 
 - AllinCMS site id:
 - Front-end domain:
-- Workspace URL:
-- Browser profile (which logged-in profile to use):
+- Workspace URL: https://workspace.laicms.com/
+- Browser profile (which logged-in profile to use): system default
 - Default content language: zh-CN
 - deployment: saas
 

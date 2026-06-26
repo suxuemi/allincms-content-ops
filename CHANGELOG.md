@@ -6,6 +6,45 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.8.0] — 2026-06-26
+
+Real-use feedback: v0.7 doctor 红字"pdftotext / pandoc 缺失"对新手吓人；用户问能不能上 MarkItDown（Microsoft 2024，pip 装）；同时需要 Cloudflare R2 替代 PicGo（不依赖桌面 app，AI agent 在任何 host 都能调）；discovery 在 Codex vs Claude Code 等不同 host 该用哪个浏览器没说清。
+
+> v0.7 装齐 pdftotext+pandoc 的用户**不需要重装**——doctor 仍判 strong，只是会建议装 markitdown 以覆盖 Excel 等。
+
+Codex round: [audits/codex-rounds/v0.8.0-r1.md](audits/codex-rounds/v0.8.0-r1.md) (7 findings, 4 high / 3 med, all applied).
+
+### Added
+
+- `references/ocr-strategy.md` — tool ladder for document → markdown. Default chain `MarkItDown (Microsoft, MIT) → PaddleOCR (Apache 2.0) fallback` (Fclass.1). Documents license caveats: MinerU AGPL-3.0 is never auto-invoked (Fclass.2). Privacy commitment: all OCR runs local, no hosted APIs.
+- `references/media-pipeline.md` — PicGo vs R2 trade-offs, "one host per project" rule with concrete migration path. Surfaces `doctor.media_mix` warning conditions (Fhist.1).
+- `scripts/r2_setup.py` — interactive Cloudflare R2 wizard. Walks user through dashboard (account / bucket / API token / optional custom domain), writes credentials to `~/.config/allincms-content-ops/r2.toml` (mode 0600), runs round-trip test upload (auto-cleanup).
+- `scripts/r2_upload.py` — batch upload to R2, same CLI shape as `picgo_batch_upload.py`. Idempotent (SHA-keyed object paths). Appends to `media/index.md`. Masks `access_key_id` as `xxx...xxx` in all output; `secret_access_key` never printed (Fclass.3).
+- `tests/test_doctor_extraction_matrix.py` — locks the 4 (markitdown × legacy CLI) combinations of `doctor.check_extraction` + the optional/silent behavior of `chinese_ocr` (Ffalsif.1).
+- `doctor.py` new checks: `extraction × ingest` (ANY-of: markitdown OR (pdftotext + pandoc)), `chinese_ocr × ingest` (optional — never red), `media_uploader × media`, `media_mix × media` (warns on multi-host `media/index.md`), `--refresh` flag to bypass 24h cache.
+- `current-site-discovery.md` § Browser selection per host — 6-row table mapping host to primary + fallback browser; **explicit confirm** before launch ("我打算用 X，依据是 Y。30 秒内回车确认或 manual"); Unknown host → manual fallback (paste HTML approach).
+- `audit_skill_meta.py`: 18 new regression entries.
+
+### Changed
+
+- `scripts/ingest_sources.py` overhauled:
+  - Fallback chain: markitdown → PaddleOCR (image / image-PDF) → legacy CLI → fail
+  - Named constants `EXTRACTION_MIN_CHARS = 100` and `INPUT_SUBSTANTIAL_BYTES = 50_000` replace magic numbers (Fproc.1). Dual gate prevents misfires on legitimately short inputs.
+  - Tool-specific outputs preserved to `.raw/<source>.markitdown.md` / `.raw/<source>.paddleocr.md` / etc. — no silent overwrites between fallback tiers.
+- `scripts/doctor.py` removed `check_pdftotext` / `check_pandoc` (each was a separate red flag). Replaced with single `check_extraction` (ANY-of). PaddleOCR check moved to `optional` category — never red in dashboard summary (Fclass.1).
+- `references/tooling-matrix.md` `user_facing_phrasing` updated: dropped separate pdftotext / pandoc rows, added `extraction` (markitdown recommendation), `chinese_ocr` (silent), `media_uploader` (R2 or PicGo), `media_mix` (warn).
+- `SKILL.md` Resource Map registers 5 new files (ocr-strategy, media-pipeline, r2_setup, r2_upload, test_doctor_extraction_matrix).
+
+### Migration
+
+(none required — additive only.)
+
+- v0.7 users with pdftotext + pandoc: nothing to do. doctor still strong, with a one-line nudge to `pipx install markitdown` for Excel coverage.
+- v0.7 users without pdftotext / pandoc who were seeing red: `pipx install markitdown` clears the warning. Or install `brew install poppler pandoc` to keep the legacy path.
+- PicGo users: continue. R2 is an alternative, not a replacement.
+
+[0.8.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.8.0
+
 ## [0.7.0] — 2026-06-26
 
 Real-run feedback again: user asked "帮我打开后台" and v0.6 AI refused with "请给我这 4 个值: AllinCMS site id / Front-end domain / Workspace URL / Browser profile". User pointed out that `workspace_url` is a constant for all SaaS users, `browser_profile` is auto-detectable, and `site_id` is in the workspace URL after login — none of these should be asked upfront. v0.7 replaces "ask 4 values" with discovery-driven flow.
@@ -185,5 +224,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.8.0...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

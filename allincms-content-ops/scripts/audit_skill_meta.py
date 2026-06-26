@@ -17,6 +17,103 @@ from pathlib import Path
 
 
 CHECKS = {
+    # Codex round v0.8.0-r1 (MarkItDown + PaddleOCR + R2 + host-aware browser)
+    "ocr-strategy-ref": {
+        "file": "allincms-content-ops/references/ocr-strategy.md",
+        "pattern": r"OCR Strategy",
+        "intent": "OCR strategy reference exists; documents ladder + privacy stance",
+    },
+    "ocr-strategy-mineru-agpl-warning": {
+        "file": "allincms-content-ops/references/ocr-strategy.md",
+        "pattern": r"AGPL-3.0",
+        "intent": "MinerU AGPL caveat is explicit (Fclass.2)",
+    },
+    "ocr-strategy-no-hosted-apis": {
+        "file": "allincms-content-ops/references/ocr-strategy.md",
+        "pattern": r"all OCR in this skill runs locally",
+        "intent": "privacy commitment recorded",
+    },
+    "media-pipeline-ref": {
+        "file": "allincms-content-ops/references/media-pipeline.md",
+        "pattern": r"one host per project",
+        "intent": "media-pipeline reference documents the no-mix rule",
+    },
+    "ingest-markitdown-fallback": {
+        "file": "allincms-content-ops/scripts/ingest_sources.py",
+        "pattern": r"try_markitdown",
+        "intent": "ingest_sources prefers markitdown",
+    },
+    "ingest-dual-gate-constants": {
+        "file": "allincms-content-ops/scripts/ingest_sources.py",
+        "pattern": r"EXTRACTION_MIN_CHARS",
+        "intent": "dual gate uses named constants, not magic numbers (Fproc.1)",
+    },
+    "ingest-preserve-raw": {
+        "file": "allincms-content-ops/scripts/ingest_sources.py",
+        "pattern": r"def preserve_raw",
+        "intent": "tool-specific raw outputs preserved, no silent overwrites",
+    },
+    "doctor-extraction-anyof": {
+        "file": "allincms-content-ops/scripts/doctor.py",
+        "pattern": r"def check_extraction",
+        "intent": "doctor uses ANY-of (markitdown OR legacy CLI) — single check, not two",
+    },
+    "doctor-chinese-ocr-optional": {
+        "file": "allincms-content-ops/scripts/doctor.py",
+        "pattern": r"OPTIONAL category",
+        "intent": "PaddleOCR check never degrades the dashboard (Fclass.1)",
+    },
+    "doctor-media-mix-check": {
+        "file": "allincms-content-ops/scripts/doctor.py",
+        "pattern": r"def check_media_mix",
+        "intent": "media/index.md multi-host detection (Fhist.1)",
+    },
+    "doctor-refresh-flag": {
+        "file": "allincms-content-ops/scripts/doctor.py",
+        "pattern": r"--refresh",
+        "intent": "--refresh bypasses 24h cache (potential issue #5)",
+    },
+    "r2-setup-script": {
+        "file": "allincms-content-ops/scripts/r2_setup.py",
+        "pattern": r"def write_config",
+        "intent": "R2 setup wizard script",
+    },
+    "r2-upload-script": {
+        "file": "allincms-content-ops/scripts/r2_upload.py",
+        "pattern": r"def upload_one",
+        "intent": "R2 batch-upload script",
+    },
+    "r2-key-masking": {
+        "file": "allincms-content-ops/scripts/r2_upload.py",
+        "pattern": r"def mask_key",
+        "intent": "access_key_id masking (Fclass.3)",
+    },
+    "discovery-browser-per-host-table": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"Browser selection per host",
+        "intent": "host-aware browser table",
+    },
+    "discovery-explicit-confirm": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"explicit confirm before launching",
+        "intent": "host detection requires explicit user confirm (Fproc.2)",
+    },
+    "discovery-manual-fallback": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"Unknown host.*manual",
+        "intent": "unknown host explicit manual fallback",
+    },
+    "test-doctor-extraction-matrix": {
+        "file": "tests/test_doctor_extraction_matrix.py",
+        "pattern": r"def test_neither",
+        "intent": "doctor matrix tests cover the 4 combinations (Ffalsif.1)",
+    },
+    "codex-round-v080": {
+        "file": "audits/codex-rounds/v0.8.0-r1.md",
+        "pattern": r"Codex Round v0\.8\.0-r1",
+        "intent": "v0.8.0 codex round persisted to disk",
+    },
+
     # Codex round v0.7.0-r1 (opportunistic Current Site discovery)
     "current-site-discovery-ref": {
         "file": "allincms-content-ops/references/current-site-discovery.md",
@@ -129,8 +226,8 @@ CHECKS = {
     # Codex round v0.5.0-r1 (newbie first-mile)
     "doctor-script": {
         "file": "allincms-content-ops/scripts/doctor.py",
-        "pattern": r"def check_pdftotext",
-        "intent": "newbie diagnostic script exists",
+        "pattern": r"def check_extraction",
+        "intent": "newbie diagnostic script exists (extraction check is v0.8.0 successor to v0.5 check_pdftotext + check_pandoc; this slug remains for continuity)",
     },
     "doctor-three-tier-vocab": {
         "file": "allincms-content-ops/scripts/doctor.py",

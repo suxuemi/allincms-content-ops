@@ -51,9 +51,10 @@ When `doctor.py` reports a non-strong cell, the AI uses the `user_facing_phrasin
 |---|---|---|
 | `git` | missing × critical | `先装 git 才能跑这套 skill — https://git-scm.com/downloads` |
 | `python` | missing × critical | `Python 至少要 3.9，升级一下再继续` |
-| `pdftotext` | degraded × ingest | `想丢 PDF 给我得装 pdftotext (brew install poppler / apt install poppler-utils)，现在跳过没事` |
-| `pandoc` | degraded × ingest | `想丢 Word / PPT 给我得装 pandoc (brew install pandoc / apt install pandoc)，现在跳过没事` |
-| `picgo` | degraded × media | `想批量上传图片要先打开 PicGo 桌面端（Settings → PicGo-Server 开启）` |
+| `extraction` | degraded × ingest | `想抓 PDF / Word / PPT / Excel 推荐装 markitdown：pipx install markitdown。已装 pdftotext+pandoc 的可以继续用，不用改` |
+| `chinese_ocr` | optional × ingest | (silent — only surfaced per-file when ingest needs it; never red in doctor summary) |
+| `media_uploader` | degraded × media | `批量上传图片要先二选一：(a) python3 scripts/r2_setup.py 配 Cloudflare R2，或 (b) 开 PicGo 桌面端` |
+| `media_mix` | degraded × media | `media/index.md 同时引用了多个图床域名 — 容易出现新老文章半挂，参考 references/media-pipeline.md` |
 | `current_site` | missing × open_backend_or_monitor | `打开后台 / 跑监控时我会先开 workspace 引导登录确认，自动补 site_id / 域名 — 不用现在手填` |
 | `current_site` | missing × publish | `Current Site 字段会在第一次开后台时由 discovery 自动补上；不用现在手填` |
 | `published_index` | degraded × internal_links | `还没发过文章，内链建议会是空的（第一篇发完就有了）` |
