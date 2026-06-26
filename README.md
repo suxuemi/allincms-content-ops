@@ -17,6 +17,22 @@
 
 > **规则源单一**：所有操作契约（SKILL.md / references / scripts）只维护英文版，避免双语漂移。中文文档只覆盖"门面 + 入门"。
 
+## 第一次用？
+
+跑一遍诊断，看看本地少装啥（git / python ≥ 3.9 / pdftotext / pandoc / PicGo），有问题先按 doctor 给的链接装：
+
+```bash
+git clone https://github.com/suxuemi/allincms-content-ops.git
+cd allincms-content-ops
+python3 allincms-content-ops/scripts/doctor.py .
+```
+
+`[OK]` 全绿就贴下面的 prompt；`[WARN]` 可以继续但有些功能要 fallback；`[FAIL]` 先按它给的 `→` 链接装好。
+
+> 已经跑过 doctor？跳到下一段。
+
+---
+
 ## 给 AI 用（一句话安装）
 
 复制下面这段贴给 Claude Code / Codex / Cursor / 任何 AI 编程助手——AI 会自己装好、用你的语言介绍这套 skill、列几个常见用法，再问你想从哪儿开始：

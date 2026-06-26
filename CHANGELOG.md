@@ -6,6 +6,41 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.5.0] — 2026-06-26
+
+Newbie first-mile optimization. v0.4 had real-use bugs fixed; v0.5 addresses the bigger friction — newbies were never reaching their first publish because of cascading "didn't know I had to install X" / "didn't know what to fill in" failures.
+
+Codex round: [audits/codex-rounds/v0.5.0-r1.md](audits/codex-rounds/v0.5.0-r1.md) (7 findings, 4 high / 3 med; Fclassification.1 caused Design B to be replaced).
+
+### Added
+
+- `scripts/doctor.py` — one-stop environment diagnostic. Three-tier output (`strong` / `degraded` / `missing`) reusing `tooling-matrix.md` vocabulary (Fprocess.1). Each non-strong finding links to a `tooling-matrix.md` anchor with remediation. Result cached to `.doctor-cache.json` so first-contact Phase -2 reads it without re-running.
+- `scripts/check_draft.py` — teaching tool for newbies. Scans a draft and explains, field-by-field, what's missing and **why each one matters**. Never modifies files, never returns non-zero. Publish gates stay in `audit_content.py` (Fclassification.1 driver: Design B `--onboarding` flag dropped — would have broken reviewer protocol).
+- `examples/sample-article-zh/article.md` and `examples/sample-article-en/article.md` — fully-filled reference drafts. ~400 words each, 3 H2 sections, internal links, credibility evidence references.
+- `examples/README.md` — explains how to use examples + warns explicitly against copying identity fields literally.
+- `first-contact.md` § `Phase -2: Doctor` — runs before Phase -1 if `.doctor-cache.json` is missing or > 24h old. Surfaces remediation lines verbatim.
+- `audit_skill_meta.py`: 12 new regression entries.
+
+### Changed
+
+- `audit_content.py`: new **Hard Gate** `unreplaced_placeholders` — frontmatter containing `__REPLACE_ME__` blocks publish. Backward safe: no v0.4 draft uses this literal, so no existing draft fails re-audit (Fhistorical.1).
+- `README.md`: new `## 第一次用？` section above the AI install prompt, separated by `---`. Tells newbies to run doctor first; old users skip past per Fhistorical.2 (visual separator preserves existing muscle memory).
+- `first-contact.md` Phase 4 `draft & ship` route: now lists explicit next-step commands — read examples → ask for persona/query → `new_draft.py` → `check_draft.py` → Workflow step 3.
+- `SKILL.md` Resource Map registers `doctor.py`, `check_draft.py`, `examples/`.
+- `.gitignore`: `.doctor-cache.json` ignored.
+
+### Design changes from review
+
+- **Design B (`--onboarding` flag) dropped** per Fclassification.1: relaxing audit blocking would have left reviewer Pass Criteria untouched (8.5 + each ≥ 70% + ≥ 5 objections); newbie would have escaped audit but been killed by reviewer. Replaced with teaching path (Design C+++): `check_draft.py` explains the rules, examples show what good looks like, `__REPLACE_ME__` Hard Gate catches the lethal "copy example forgot to override" mistake.
+
+### Migration
+
+(none — all additive or backward-safe.)
+
+If you have existing v0.4 drafts that you opt to validate against the new `unreplaced_placeholders` Hard Gate: nothing to do — gate is automatic. To run the teaching tool retroactively: `python3 allincms-content-ops/scripts/check_draft.py <draft.md>`.
+
+[0.5.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.5.0
+
 ## [0.4.0] — 2026-06-26
 
 Real-use feedback after v0.3.0: AI-drafted articles had H1 duplicated into body, never set internal links, and lacked rich company/product context. This release closes the three loops.
@@ -86,5 +121,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.5.0...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

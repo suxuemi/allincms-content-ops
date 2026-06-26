@@ -51,3 +51,4 @@ media/uploaded/picgo-*.json
 .claude/
 .codex-session/
 picgo-manifest.json
+.doctor-cache.json

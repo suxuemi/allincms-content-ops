@@ -17,6 +17,68 @@ from pathlib import Path
 
 
 CHECKS = {
+    # Codex round v0.5.0-r1 (newbie first-mile)
+    "doctor-script": {
+        "file": "allincms-content-ops/scripts/doctor.py",
+        "pattern": r"def check_pdftotext",
+        "intent": "newbie diagnostic script exists",
+    },
+    "doctor-three-tier-vocab": {
+        "file": "allincms-content-ops/scripts/doctor.py",
+        "pattern": r"strong.*degraded.*missing",
+        "intent": "doctor reuses tooling-matrix three-tier vocabulary (Fprocess.1)",
+    },
+    "doctor-cache-gitignored": {
+        "file": ".gitignore",
+        "pattern": r"\.doctor-cache\.json",
+        "intent": "doctor cache is gitignored",
+    },
+    "check-draft-script": {
+        "file": "allincms-content-ops/scripts/check_draft.py",
+        "pattern": r"teaching mode",
+        "intent": "check_draft.py is the teaching tool (no blocking, no side effects)",
+    },
+    "audit-replace-me-gate": {
+        "file": "allincms-content-ops/scripts/audit_content.py",
+        "pattern": r"unreplaced_placeholders",
+        "intent": "Hard Gate against __REPLACE_ME__ leak from examples (Fhistorical.1)",
+    },
+    "examples-zh-replace-me": {
+        "file": "examples/sample-article-zh/article.md",
+        "pattern": r"__REPLACE_ME__",
+        "intent": "Chinese example uses __REPLACE_ME__ for identity fields",
+    },
+    "examples-en-replace-me": {
+        "file": "examples/sample-article-en/article.md",
+        "pattern": r"__REPLACE_ME__",
+        "intent": "English example uses __REPLACE_ME__ for identity fields",
+    },
+    "examples-readme-warning": {
+        "file": "examples/README.md",
+        "pattern": r"DO NOT COPY identity fields",
+        "intent": "examples/README explicitly warns against identity leak",
+    },
+    "first-contact-phase-minus-two": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"Phase -2: Doctor",
+        "intent": "Phase -2 (doctor) runs before Phase -1",
+    },
+    "first-contact-draft-and-ship-path": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"check_draft\.py",
+        "intent": "draft & ship path steps now reference check_draft.py teaching",
+    },
+    "readme-doctor-section": {
+        "file": "README.md",
+        "pattern": r"第一次用？",
+        "intent": "README has the newbie doctor section above the AI install prompt",
+    },
+    "codex-round-v050": {
+        "file": "audits/codex-rounds/v0.5.0-r1.md",
+        "pattern": r"Codex Round v0\.5\.0-r1",
+        "intent": "v0.5.0 codex round persisted to disk",
+    },
+
     # Codex round v0.4.0-r1 (material ingestion + H1 dedup + internal links)
     "audit-warn-prefixes-frozenset": {
         "file": "allincms-content-ops/scripts/audit_content.py",

@@ -143,6 +143,12 @@ def audit_file(path):
     fm = parse_frontmatter(text)
     is_web_content = path.suffix.lower() in {".md", ".mdx"} and is_web_content_file(path)
     if is_web_content:
+        # Hard Gate (v0.5.0 / Fhistorical.1): frontmatter must not retain example placeholder.
+        # Without this, an author who copied examples/sample-article-* but forgot to override
+        # identity fields would publish an article tagged with the example site_id.
+        placeholder_fields = [k for k, v in fm.items() if "__REPLACE_ME__" in str(v)]
+        if placeholder_fields:
+            issues.append(f"unreplaced_placeholders={','.join(placeholder_fields)}")
         missing = [k for k in REQUIRED_FRONTMATTER if k not in fm or not str(fm.get(k, "")).strip()]
         if missing:
             issues.append(f"missing_frontmatter={','.join(missing)}")

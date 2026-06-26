@@ -32,6 +32,21 @@ Do NOT default to PROJECT_INDEX `Default content language` — that's site-wide,
 
 ---
 
+## Phase -2: Doctor (BEFORE Phase -1, when env state is unknown)
+
+A newbie cloning the repo doesn't know which dependencies are missing until they hit the workflow step that needs them. Run the doctor once to save the trip-up.
+
+Look for `.doctor-cache.json` at project root.
+
+- Missing OR older than 24 hours → run `python3 allincms-content-ops/scripts/doctor.py .`. Report the result categories `strong / degraded / missing` to the user (do not paraphrase — show the actual line so the user can read the remediation link).
+- Present and fresh → skip the run; just summarize.
+
+If doctor exits 2 (critical missing — git / python), STOP and surface the remediation. Phase -1 and beyond depend on git.
+
+If doctor exits 1 (publish-required missing — Current Site fields empty etc.), continue to Phase -1 but flag that publishing will block later.
+
+If doctor exits 0, proceed to Phase -1.
+
 ## Phase -1: Skill sync (BEFORE reading SKILL.md or anything else, ONCE per session)
 
 If the installed skill is git-backed, check for upstream updates first — running on stale rules wastes everyone's time. This phase runs **once per session, before Phase 1, before SKILL.md is read in earnest**.
@@ -210,7 +225,7 @@ After user picks:
 | User's pick | Next move |
 |---|---|
 | `init a fresh project` | Walk through 5 `Current Site` fields one at a time. Then run `init_content_ops_project.py`. |
-| `draft & ship` | Check `Current Site` is complete; if not, route through init first. Then ask: persona slug + primary query (or "infer from competitor URL?"). Scaffold via `scripts/new_draft.py`. Enter Workflow at step 3. |
+| `draft & ship` | (1) Check `Current Site` complete; if not, route through init. (2) Suggest the user reads `examples/sample-article-{zh,en}/article.md` once so they see what a complete frontmatter looks like — saves 20 min of "which fields?" back-and-forth. (3) Ask: persona slug + primary query (or "infer from competitor URL?"). (4) Scaffold via `scripts/new_draft.py`. (5) Run `scripts/check_draft.py <new-draft>` — surfaces exactly which fields need filling, with the why for each. (6) Enter Workflow at step 3. |
 | `monitor competitors` | Ask for 1–3 competitor domains. Run `sitemap_discover.py` on each, show candidates, user confirms entries into `monitoring/competitors.yml`. Then `monitor_run.py --dry-run`. |
 | `audit existing page` | Ask for slug or live URL. Local → `audit_content.py --light`. Live → `site_health_check.py`. Report, ask which fix first. |
 | `distill from raw` | Ask what's in `raw/` already, or what they'd drop. Walk through `ingest_sources.py`. Then suggest a `wiki/` page structure. |
