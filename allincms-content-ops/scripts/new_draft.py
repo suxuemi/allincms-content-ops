@@ -52,7 +52,8 @@ def read_project_default_language(project_root):
     return None
 
 
-ZH_BODY = """# {title}
+ZH_BODY = """<!-- AllinCMS 渲染 frontmatter `title:` 作为页面 H1；body 不要再用 # 标题，子标题从 ## 开始。
+内链：跑 `scripts/suggest_internal_links.py <此文件>` 拿 3-8 个候选，挑相关的 [文本](/相对路径) 加进来。 -->
 
 TODO — 用一句话直接回答主要查询，开门见山。
 
@@ -69,7 +70,8 @@ TODO
 TODO
 """
 
-EN_BODY = """# {title}
+EN_BODY = """<!-- AllinCMS renders frontmatter `title:` as the page H1; do not use # in the body. Subheadings start at ##.
+Internal links: run `scripts/suggest_internal_links.py <this-file>` for 3-8 candidates, pick the relevant ones. -->
 
 TODO — replace this body. Open with one sentence answering the primary query.
 
@@ -115,6 +117,7 @@ author: {author}
 source_external:
 related: []
 last_seo_check: {today}
+created_with_version: "0.4.0"
 allincms:
   site_id:
   post_id:

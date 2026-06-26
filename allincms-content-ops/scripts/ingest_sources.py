@@ -90,14 +90,12 @@ def extract_file(path):
         out = run_converter(["pdftotext", str(path), "-"])
         if out:
             return out
-    if suffix in {".docx", ".doc"}:
+        return "__EXTRACTOR_MISSING__:pdftotext (brew install poppler / apt install poppler-utils) OR convert to .md manually and re-run"
+    if suffix in {".docx", ".doc", ".pptx", ".ppt"}:
         out = run_converter(["pandoc", str(path), "-t", "markdown"])
         if out:
             return out
-    if suffix in {".pptx", ".ppt"}:
-        out = run_converter(["pandoc", str(path), "-t", "markdown"])
-        if out:
-            return out
+        return f"__EXTRACTOR_MISSING__:pandoc (brew install pandoc / apt install pandoc) OR convert {suffix} to .md manually and re-run"
     return ""
 
 
@@ -117,6 +115,10 @@ def make_markdown(source_name, source_ref, source_type, rights, extracted_text):
     body = extracted_text.strip()
     if len(body) > 60000:
         body = body[:60000] + "\n\n[truncated]\n"
+    if body.startswith("__EXTRACTOR_MISSING__:"):
+        # Surface this loudly — first-contact Phase 2.5 brief warns that AI must
+        # NOT silently draft from "Extraction unavailable" content (Fprocess.2).
+        body = "EXTRACTION FAILED: " + body[len("__EXTRACTOR_MISSING__:"):]
     if not body:
         body = "Extraction unavailable. Keep the original source and summarize manually before compiling wiki pages."
     return f"""---
@@ -182,10 +184,19 @@ def main():
         print(f"Missing raw/ under project root: {root}", file=sys.stderr)
         return 2
     outputs = []
+    extractor_misses = 0
     for source in args.sources:
-        outputs.append(ingest_one(root, source, args.rights))
+        out = ingest_one(root, source, args.rights)
+        outputs.append(out)
+        # Surface extractor-missing failures so first-contact Phase 2.5 can't silently draft from empty content (Fprocess.2).
+        if out and "EXTRACTION FAILED:" in Path(out).read_text(encoding="utf-8", errors="ignore"):
+            extractor_misses += 1
+            print(f"warning: extraction failed for {source} — see {out}", file=sys.stderr)
     for path in outputs:
         print(path)
+    if extractor_misses:
+        print(f"\n{extractor_misses} source(s) failed extraction; install the missing extractor OR convert to .md and re-ingest before the AI drafts from these raw files.", file=sys.stderr)
+        return 3
     return 0
 
 

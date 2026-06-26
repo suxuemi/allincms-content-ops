@@ -50,6 +50,12 @@ def iter_markdown(root):
     for p in root.rglob("*.md"):
         if ".git" in p.parts or "node_modules" in p.parts:
             continue
+        # `_ai-drafts/` is the staging area where first-contact Phase 2.5
+        # parks AI-bootstrapped wiki/products/<slug>.md and wiki/personas/<slug>.md
+        # before the user promotes them. Library health treats those as
+        # work-in-progress, not authoritative wiki content — skip them.
+        if "_ai-drafts" in p.parts:
+            continue
         yield p
 
 

@@ -209,6 +209,9 @@ All three must point back to this skill and the same `PROJECT_INDEX.md`. Do not 
 - `references/codex-design-reviewer.md`: codex brief for **design-time** review (separate from content-time `codex-adversarial-reviewer.md`). Required for Substantive / Breaking changes per the Update Checklist.
 - `scripts/audit_skill_meta.py`: persistent regression check (one switch per high-severity codex finding); replaces throwaway heredoc self-scans. Run in CI after every `audit_content.py` run.
 - `audits/codex-rounds/`: per-round codex review outputs. CHANGELOG entries reference findings here by relative path.
+- `scripts/suggest_internal_links.py`: read a draft's frontmatter, scan `web/published/index.md`, print scored candidates for the author to paste as internal links (≥ 3 / page per markdown-style-guide). Scoring weights at top of file; locked by `tests/test_suggest_links.py`.
+- `tests/test_suggest_links.py`: fixture-based ranking test (Ffalsifiability.1 of v0.4.0-r1) — future weight tweaks surface as test diffs.
+- `wiki/products/_ai-drafts/` and `wiki/personas/_ai-drafts/` (created on first-contact Phase 2.5): staging area for AI-bootstrapped wiki pages. User promotes by moving out of `_ai-drafts/` and flipping `trust:` to `human-verified`. `library_health.py` and `audit_content.py` skip this subdir.
 - `scripts/sitemap_diff.py`: fetch each competitor's `sitemap.xml`, diff against the last snapshot, write a dated diff file under `monitoring/runs/sitemap/`, and (optionally) append new URLs as `proposed` opportunities.
 - `references/prompt-templates.md`: copy-paste prompts for persona extraction, search-intent brief, outline, competitor distillation, alt text, and lesson proposal.
 - `references/content-system-tables.md`: four-table model — knowledge / competitors / opportunities / copy library — with cadence and write-authority rules.

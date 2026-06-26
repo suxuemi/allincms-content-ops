@@ -185,6 +185,30 @@ def audit_file(path):
                     bad_refs.append(ref)
             if bad_refs:
                 issues.append(f"missing_credibility_artifact={','.join(bad_refs)}")
+        # body H1 duplicate check — gated on `created_with_version >= 0.4.0`
+        # so v0.3 drafts (no field) don't get warning-flooded after upgrade.
+        cwv = str(fm.get("created_with_version", "")).strip().strip('"').strip("'")
+        if cwv:
+            try:
+                parts = tuple(int(x) for x in cwv.split(".")[:3])
+                if parts >= (0, 4, 0):
+                    body_start = text.find("\n---", 4)
+                    if body_start != -1:
+                        body = text[body_start + 4:].lstrip()
+                        # ignore HTML comment block at top
+                        body = re.sub(r"^<!--.*?-->\s*", "", body, count=1, flags=re.S)
+                        if body.startswith("# "):
+                            first_h1 = body.split("\n", 1)[0]
+                            issues.append(f"body_h1_duplicate={first_h1[:60]}")
+            except (ValueError, AttributeError):
+                pass
+        # internal-links suggestion — full-mode warning when body has < 3 markdown links
+        if is_web_content:
+            body_start = text.find("\n---", 4)
+            body_only = text[body_start + 4:] if body_start != -1 else text
+            link_count = len(re.findall(r"\[[^\]]+\]\([^)#h][^)]*\)", body_only))
+            if link_count < 3:
+                issues.append(f"missing_internal_links=count={link_count}")
         # meta length checks
         mt = str(fm.get("meta_title", "")).strip()
         if mt and not (META_TITLE_MIN <= len(mt) <= META_TITLE_MAX):
@@ -225,7 +249,18 @@ LIGHT_SKIP = {
     "missing_credibility_artifact",
     "meta_title_length",
     "meta_description_length",
+    "body_h1_duplicate",
+    "missing_internal_links",
 }
+
+# Issues whose prefix matches WARN_PREFIXES are reported in their own
+# `!`-prefixed line and counted under `warnings=N` (NOT `issues=N`).
+# Exit code is driven by blocking issues only — warnings never fail.
+# Added v0.4.0 (Fclassification.1); regression-checked by audit_skill_meta.
+WARN_PREFIXES = frozenset({
+    "body_h1_duplicate",
+    "missing_internal_links",
+})
 
 
 def filter_light(issues):
@@ -333,16 +368,22 @@ def main():
             and "node_modules" not in p.parts
         ]
     total_issues = 0
+    total_warnings = 0
     for path in sorted(targets):
         issues = audit_file(path)
         if args.light:
             issues = filter_light(issues)
+        blocking = [i for i in issues if i.split("=", 1)[0] not in WARN_PREFIXES]
+        warnings = [i for i in issues if i.split("=", 1)[0] in WARN_PREFIXES]
         if issues:
-            total_issues += len(issues)
             rel = path.relative_to(base)
             print(f"{rel}")
-            for issue in issues:
+            for issue in blocking:
                 print(f"  - {issue}")
+            for issue in warnings:
+                print(f"  ! {issue}")
+            total_issues += len(blocking)
+            total_warnings += len(warnings)
     if args.check_raw_immutable and not args.light:
         for issue in check_raw_immutable(project_root):
             total_issues += 1
@@ -381,9 +422,10 @@ def main():
                 if (today - d).days > args.lessons_drain_days:
                     total_issues += 1
                     print(f"lessons_drain: approved entry dated {d} sat > {args.lessons_drain_days} days unmerged")
-    print(f"files={len(targets)} issues={total_issues} mode={'light' if args.light else 'full'}")
+    print(f"files={len(targets)} issues={total_issues} warnings={total_warnings} mode={'light' if args.light else 'full'}")
     logger = JsonlLogger("audit_content", project_root=project_root if args.log else None)
-    logger.info("run_end", files=len(targets), issues=total_issues, mode="light" if args.light else "full")
+    logger.info("run_end", files=len(targets), issues=total_issues, warnings=total_warnings,
+                mode="light" if args.light else "full")
     raise SystemExit(1 if total_issues else 0)
 
 

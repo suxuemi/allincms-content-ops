@@ -135,6 +135,44 @@ If 2 chosen → ask the 3 questions **one message at a time** (don't dump a form
 
 Skip the choice — just ask the 3 questions directly. Same write-with-confirmation flow as Path B-2.
 
+## Phase 2.5: Material ingestion (conditional — Path B-2 / C only)
+
+**Trigger**: only if Phase 2 went through **Path C (cold)** or **Path B-2 (3-line answer because fetch failed or user declined)**. Path A / A′ / successful Path B-1 → **skip this entire phase**, go to Phase 3.
+
+When triggered, before asking for new materials, list what's already in `raw/` (one line per entry, max 5; if more, "and N more — see raw/index.md"). This is so the user adds to / corrects, not re-uploads.
+
+Then ask **one open question** (detected language):
+
+> 在我列具体方向之前——如果你手里有这些任一种，丢进来我顺手蒸馏到 `wiki/products/_ai-drafts/` 和 `wiki/personas/_ai-drafts/`，Phase 3 场景会精准很多：
+> - 官网 / 落地页 URL
+> - 产品 PDF / 销售 PPT / 白皮书
+> - 客户访谈 Word / 通话纪要
+> - 团队 Notion / Confluence 导出
+> （或者直接说 "先跳，列场景"）
+
+### Ingestion contract
+
+For each item the user provides:
+
+1. `python3 allincms-content-ops/scripts/ingest_sources.py . <source> --rights "owned"`.
+2. **Check ingest_sources exit code.** If non-zero (extractor missing — pdftotext / pandoc absent), surface to the user: "我抓不动这个 PDF / PPT，得装 pdftotext / pandoc，或者你先转 .md 再丢给我；不要硬撑用它当素材"。DO NOT draft from the resulting raw file if its body contains `EXTRACTION FAILED:` — that path produces hallucination, not extraction.
+3. Once raw files are real, propose drafts to **`wiki/products/_ai-drafts/<slug>.md`** and/or **`wiki/personas/_ai-drafts/<slug>.md`** — NOT to the root of `wiki/products/` / `wiki/personas/` (those may already hold human-curated content per Fhistorical.1 of codex round v0.4.0-r1). Mark each `trust: ai-drafted, needs_human_review: true` per the schema in `corpus-layout.md` § AI-drafted wiki pages.
+4. Show the proposed drafts to the user; only write on confirmation.
+
+### Promote workflow (user-driven)
+
+The user promotes an AI draft by manually moving:
+```bash
+mv wiki/products/_ai-drafts/foo.md wiki/products/foo.md
+# then edit frontmatter: trust: human-verified; remove needs_human_review
+```
+
+`library_health.py` and `audit_content.py` exclude `_ai-drafts/` from `consumed_by` / orphan / backlink checks — these stagings are work-in-progress, not authoritative.
+
+### After ingestion (or user said "skip")
+
+Proceed to Phase 3. Tailored scenarios are now grounded in real material if user provided any.
+
 ## Phase 3: Tailored scenarios
 
 Now — and only now — list 3–5 concrete starter scenarios.

@@ -6,6 +6,38 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.4.0] — 2026-06-26
+
+Real-use feedback after v0.3.0: AI-drafted articles had H1 duplicated into body, never set internal links, and lacked rich company/product context. This release closes the three loops.
+
+Codex round: [audits/codex-rounds/v0.4.0-r1.md](audits/codex-rounds/v0.4.0-r1.md) (6 findings, 3 high / 3 med, all applied).
+
+### Added
+
+- `references/first-contact.md` § **Phase 2.5: Material ingestion** — conditional (Path B-2 / C only) prompt for users to drop in website URLs / PDFs / PPTs / Word / Notion exports. AI distills to `wiki/products/_ai-drafts/` and `wiki/personas/_ai-drafts/` (subdir, never overwrites human-curated wiki root). Promote is a manual `mv` step (Fhistorical.1).
+- `scripts/suggest_internal_links.py` — reads draft frontmatter, scores `web/published/index.md` rows by tag overlap + persona / category match + secondary-query token hits; prints top N pasteable candidates.
+- `tests/test_suggest_links.py` — fixture-based ranking lock (Ffalsifiability.1).
+- `audit_content.py` two new warning-class checks: `body_h1_duplicate` (gated on `created_with_version >= 0.4.0` so v0.3 drafts aren't flooded — Fclassification.2) and `missing_internal_links` (warn when body has < 3 internal links).
+- `audit_content.py` `WARN_PREFIXES` frozenset — explicit registry for warning-class issues; reported on `!`-prefixed lines, counted under new `warnings=N` summary segment (Fclassification.1).
+- `wiki/products/_ai-drafts/` and `wiki/personas/_ai-drafts/` staging subdirs; `library_health.py` and `audit_content.py` exclude them from `consumed_by` / orphan / backlink checks.
+- `audit_skill_meta.py`: 12 new regression entries covering all v0.4.0-r1 finding patches.
+
+### Changed
+
+- `new_draft.py` body templates no longer carry `# {title}` H1 (AllinCMS renders frontmatter `title:` as the H1; body H1 caused duplication). Body opens directly with a one-sentence summary; subheadings start at `##`. Templates inline a comment pointing to `suggest_internal_links.py` for link picks.
+- `new_draft.py` injects `created_with_version: "0.4.0"` into frontmatter — drives version-gated warning checks.
+- `ingest_sources.py` surfaces missing extractors (pdftotext / pandoc) loudly: stderr explains how to install or convert; non-zero exit code on failure; body marker `EXTRACTION FAILED:` prevents silent draft-from-empty (Fprocess.2).
+- `audit_content.py` summary line shape: `files=N issues=M warnings=W mode=full`. **CI / downstream that parsed only `issues=N` stays correct**; the new `warnings=` field is additive. Tools that also want to react to warnings can grep the new field.
+- `SKILL.md` Resource Map registers the new script, test, and `_ai-drafts/` staging directories.
+
+### Migration
+
+(none required — all changes are additive or version-gated.)
+
+If you've been using v0.3 drafts with `# {title}` in the body, they will NOT be flagged automatically (no `created_with_version` field → check skipped). To opt-in to the check on legacy drafts, add `created_with_version: "0.4.0"` to their frontmatter manually.
+
+[0.4.0]: https://github.com/suxuemi/agently-mail/releases/tag/v0.4.0
+
 ## [0.3.0] — 2026-06-26
 
 self-applied v0.3.0 — first release authored under the Update Checklist itself defines.
@@ -54,5 +86,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.4.0...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

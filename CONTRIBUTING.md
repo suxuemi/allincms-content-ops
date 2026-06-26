@@ -41,6 +41,8 @@ Each codex round adds entries to `allincms-content-ops/scripts/audit_skill_meta.
 
 Heredocs are banned for self-adversarial scans — they vanish after one run. Persistent checks live in `audit_skill_meta.py`.
 
+**WARN_PREFIXES policy** (added v0.4.0 per `audits/codex-rounds/v0.4.0-r1.md#fclassification.1`): any addition or removal from `audit_content.py:WARN_PREFIXES` is a Substantive change — it shifts audit semantics for existing CI. Must run through this checklist and add an `audit_skill_meta` entry asserting the new prefix's exit-code behavior.
+
 ### 4. Tests
 
 ```bash

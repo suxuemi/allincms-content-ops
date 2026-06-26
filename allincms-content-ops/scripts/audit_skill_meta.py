@@ -17,6 +17,68 @@ from pathlib import Path
 
 
 CHECKS = {
+    # Codex round v0.4.0-r1 (material ingestion + H1 dedup + internal links)
+    "audit-warn-prefixes-frozenset": {
+        "file": "allincms-content-ops/scripts/audit_content.py",
+        "pattern": r"WARN_PREFIXES = frozenset",
+        "intent": "warning issues live in an explicit frozenset, not scattered string checks",
+    },
+    "audit-warnings-summary-line": {
+        "file": "allincms-content-ops/scripts/audit_content.py",
+        "pattern": r"warnings=\{total_warnings\}",
+        "intent": "audit stdout reports warnings count separately (CI backward-compat)",
+    },
+    "audit-body-h1-version-gated": {
+        "file": "allincms-content-ops/scripts/audit_content.py",
+        "pattern": r"body_h1_duplicate",
+        "intent": "H1 duplicate check exists; gated on created_with_version >= 0.4.0",
+    },
+    "new-draft-created-with-version": {
+        "file": "allincms-content-ops/scripts/new_draft.py",
+        "pattern": r'created_with_version: "0\.4\.0"',
+        "intent": "scaffold injects version stamp so version-gated checks work",
+    },
+    "new-draft-no-h1-in-body": {
+        "file": "allincms-content-ops/scripts/new_draft.py",
+        "pattern": r"AllinCMS 渲染 frontmatter `title:` 作为页面 H1",
+        "intent": "scaffold body templates no longer carry `# {title}` (H1 duplication source)",
+    },
+    "library-health-ignores-ai-drafts": {
+        "file": "allincms-content-ops/scripts/library_health.py",
+        "pattern": r'"_ai-drafts" in p\.parts',
+        "intent": "library_health excludes _ai-drafts/ staging from checks",
+    },
+    "first-contact-phase-2-5": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"Phase 2\.5: Material ingestion",
+        "intent": "Phase 2.5 conditional ingestion guidance is present",
+    },
+    "first-contact-ai-drafts-subdir": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"_ai-drafts/",
+        "intent": "AI bootstraps go to _ai-drafts/ subdir, not wiki/products/ root",
+    },
+    "ingest-sources-extractor-missing-exit": {
+        "file": "allincms-content-ops/scripts/ingest_sources.py",
+        "pattern": r"__EXTRACTOR_MISSING__",
+        "intent": "ingest_sources surfaces missing extractor instead of silent fallback",
+    },
+    "suggest-internal-links-script": {
+        "file": "allincms-content-ops/scripts/suggest_internal_links.py",
+        "pattern": r"def score_candidate",
+        "intent": "internal-links suggester script exists",
+    },
+    "suggest-internal-links-fixture-test": {
+        "file": "tests/test_suggest_links.py",
+        "pattern": r"def test_overlap_topscore",
+        "intent": "scoring is locked by a fixture-based test (Ffalsifiability.1)",
+    },
+    "codex-round-v040": {
+        "file": "audits/codex-rounds/v0.4.0-r1.md",
+        "pattern": r"Codex Round v0\.4\.0-r1",
+        "intent": "v0.4.0 codex round persisted to disk",
+    },
+
     # Codex round v0.3.0-r1 (Update Checklist)
     "audits-codex-rounds-dir": {
         "file": "audits/codex-rounds/v0.3.0-r1.md",
