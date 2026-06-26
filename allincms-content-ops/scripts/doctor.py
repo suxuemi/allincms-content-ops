@@ -66,53 +66,6 @@ def check_python():
     return "strong", f"python {v.major}.{v.minor}.{v.micro}", f"{TM_ANCHOR}#python"
 
 
-def _has_markitdown():
-    if shutil.which("markitdown"):
-        return True
-    # check Python-installed flag
-    try:
-        import importlib.util
-        return importlib.util.find_spec("markitdown") is not None
-    except Exception:
-        return False
-
-
-def _has_paddleocr():
-    try:
-        import importlib.util
-        return importlib.util.find_spec("paddleocr") is not None
-    except Exception:
-        return False
-
-
-def _has_legacy_cli():
-    return bool(shutil.which("pdftotext") and shutil.which("pandoc"))
-
-
-def check_extraction():
-    """ANY-of: markitdown OR (pdftotext + pandoc). Default chain is markitdown."""
-    if _has_markitdown():
-        if _has_legacy_cli():
-            return "strong", "markitdown installed (default) + pdftotext/pandoc available as fast-path", f"{TM_ANCHOR}#extraction"
-        return "strong", "markitdown installed (default extractor — covers PDF/Word/PPT/Excel)", f"{TM_ANCHOR}#extraction"
-    if _has_legacy_cli():
-        return "strong", "pdftotext + pandoc available (legacy fast-path; consider `pipx install markitdown` to also cover Excel)", f"{TM_ANCHOR}#extraction"
-    return "degraded", "no extractor installed. Recommended: `pipx install markitdown` (covers PDF/Word/PPT/Excel). Legacy fast-path: `brew install poppler pandoc`.", f"{TM_ANCHOR}#extraction"
-
-
-def check_chinese_ocr():
-    """OPTIONAL category. Default = strong (silent) regardless of installed state.
-
-    Per codex round v0.8.0-r1 Fclass.1: PaddleOCR is ~1 GB of model deps; doctor
-    should NOT push users toward it unless they actually hit an image / scanned
-    PDF that needs OCR. ingest_sources.py surfaces the install hint per-file
-    when needed, not here.
-    """
-    if _has_paddleocr():
-        return "strong", "paddleocr installed (Chinese image / scanned PDF OCR available)", f"{TM_ANCHOR}#chinese-ocr"
-    return "strong", "paddleocr not installed (optional — install only if you have image inputs)", f"{TM_ANCHOR}#chinese-ocr"
-
-
 def check_media_uploader(project_root):
     """Either R2 configured OR PicGo running → strong. Both missing → degraded."""
     r2_configured = (Path.home() / ".config" / "allincms-content-ops" / "r2.toml").is_file()
@@ -191,11 +144,16 @@ def check_version_file(project_root):
     return "strong", f"local skill version: v{vf.read_text().strip()}", f"{TM_ANCHOR}#version"
 
 
+# v0.8.1: removed `extraction` and `chinese_ocr` checks.
+# Interactive AI agents (Codex / Claude Code) read PDF / Word / PPT natively
+# via their built-in tools — pushing users to install pdftotext / pandoc /
+# markitdown / paddleocr was over-recommendation (the same UX over-push
+# pattern that caused the v0.7 "请给我 4 个值" feedback). The CLI fallback
+# chain in ingest_sources.py is preserved as dormant code for anyone who
+# needs batch / unattended / CI ingestion; see references/ocr-strategy.md.
 CHECKS = [
     ("git",            "critical",         check_git),
     ("python",         "critical",         check_python),
-    ("extraction",     "ingest",           check_extraction),
-    ("chinese_ocr",    "optional",         check_chinese_ocr),
     ("media_uploader", "media",            lambda pr=None: check_media_uploader(pr)),
     ("media_mix",      "media",            lambda pr=None: check_media_mix(pr)),
     ("current_site",   "publish",          lambda pr=None: check_current_site(pr)),

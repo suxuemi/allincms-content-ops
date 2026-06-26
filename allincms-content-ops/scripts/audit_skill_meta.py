@@ -53,16 +53,6 @@ CHECKS = {
         "pattern": r"def preserve_raw",
         "intent": "tool-specific raw outputs preserved, no silent overwrites",
     },
-    "doctor-extraction-anyof": {
-        "file": "allincms-content-ops/scripts/doctor.py",
-        "pattern": r"def check_extraction",
-        "intent": "doctor uses ANY-of (markitdown OR legacy CLI) — single check, not two",
-    },
-    "doctor-chinese-ocr-optional": {
-        "file": "allincms-content-ops/scripts/doctor.py",
-        "pattern": r"OPTIONAL category",
-        "intent": "PaddleOCR check never degrades the dashboard (Fclass.1)",
-    },
     "doctor-media-mix-check": {
         "file": "allincms-content-ops/scripts/doctor.py",
         "pattern": r"def check_media_mix",
@@ -102,11 +92,6 @@ CHECKS = {
         "file": "allincms-content-ops/references/current-site-discovery.md",
         "pattern": r"Unknown host.*manual",
         "intent": "unknown host explicit manual fallback",
-    },
-    "test-doctor-extraction-matrix": {
-        "file": "tests/test_doctor_extraction_matrix.py",
-        "pattern": r"def test_neither",
-        "intent": "doctor matrix tests cover the 4 combinations (Ffalsif.1)",
     },
     "codex-round-v080": {
         "file": "audits/codex-rounds/v0.8.0-r1.md",
@@ -226,8 +211,8 @@ CHECKS = {
     # Codex round v0.5.0-r1 (newbie first-mile)
     "doctor-script": {
         "file": "allincms-content-ops/scripts/doctor.py",
-        "pattern": r"def check_extraction",
-        "intent": "newbie diagnostic script exists (extraction check is v0.8.0 successor to v0.5 check_pdftotext + check_pandoc; this slug remains for continuity)",
+        "pattern": r"def check_git",
+        "intent": "newbie diagnostic script exists (anchored on check_git after v0.8.1 removed extraction-related checks)",
     },
     "doctor-three-tier-vocab": {
         "file": "allincms-content-ops/scripts/doctor.py",

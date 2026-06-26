@@ -6,6 +6,36 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.8.1] — 2026-06-26
+
+User feedback after v0.8.0: "你可以读 ppt pdf word 吗?" → AI (Codex / Claude Code) confidently said yes, it can. User then asked why we're nagging them to install pdftotext / pandoc / markitdown / paddleocr if the AI agent reads these natively. Correct call — v0.5-v0.8's doctor warning was over-recommendation. The same UX pattern that caused v0.7's "请给我 4 个值" feedback. Pulling the noise.
+
+### Removed
+
+- `doctor.py` `check_extraction` function + `check_chinese_ocr` function + the three `_has_markitdown` / `_has_paddleocr` / `_has_legacy_cli` private helpers. Doctor no longer pushes users toward installing CLI extractors.
+- `doctor.py` CHECKS entries: `extraction × ingest`, `chinese_ocr × optional`. The dashboard now shows only the checks that matter to interactive AI users.
+- `references/tooling-matrix.md` user_facing_phrasing rows: `extraction × ingest`, `chinese_ocr × ingest`.
+- `tests/test_doctor_extraction_matrix.py` — tested removed code, no longer meaningful.
+- `audit_skill_meta.py` entries: `doctor-extraction-anyof`, `doctor-chinese-ocr-optional`, `test-doctor-extraction-matrix`. Re-anchored `doctor-script` regression slug on `check_git` (a stable check that's been there since v0.5).
+
+### Changed
+
+- `references/ocr-strategy.md` — added a **scope banner** at the top: "this document is for batch / unattended / CI workflows only; interactive AI agents read PDF / Word / PPT natively, you don't need to install any of these CLI tools".
+- `SKILL.md` Resource Map — removed the reference to the deleted test file.
+
+### Kept (intentionally — dormant code, doesn't bother anyone)
+
+- `ingest_sources.py` markitdown / paddleocr / pandoc fallback chain stays. Anyone running batch ingestion via cron or CI still has it; never invoked in interactive sessions.
+- `r2_setup.py` + `r2_upload.py` + `references/media-pipeline.md` — image hosting is an independent concern, not about document reading.
+
+### Migration
+
+(none — pure removal of UX noise.)
+
+For v0.8.0 users who were seeing `[WARN] extraction` in `doctor.py`: that warning is gone in v0.8.1. The CLI tools you may or may not have installed continue to work as before (or be absent — also fine).
+
+[0.8.1]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.8.1
+
 ## [0.8.0] — 2026-06-26
 
 Real-use feedback: v0.7 doctor 红字"pdftotext / pandoc 缺失"对新手吓人；用户问能不能上 MarkItDown（Microsoft 2024，pip 装）；同时需要 Cloudflare R2 替代 PicGo（不依赖桌面 app，AI agent 在任何 host 都能调）；discovery 在 Codex vs Claude Code 等不同 host 该用哪个浏览器没说清。
@@ -224,5 +254,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.8.1...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

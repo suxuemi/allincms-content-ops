@@ -1,5 +1,7 @@
 # OCR Strategy
 
+> **Scope (v0.8.1+)**: this document is for **batch / unattended / CI** workflows that run `ingest_sources.py` without an AI agent in the loop. **Interactive AI agents (Codex / Claude Code) read PDF / Word / PPT natively** via their built-in tools — you don't need to install any of the CLI tools below if you're working alongside an AI. The `doctor.py` script no longer pushes you to install these (v0.8.1 removed the `extraction` and `chinese_ocr` checks). Read on only if you're running automated batches.
+
 How this skill turns documents and images into text. Designed for the common case (text-based PDF / Office files) to need **zero** OCR; OCR is the fallback when the input is image-based or extraction returns thin output.
 
 ## Why not Baidu AI Studio (and other hosted OCR)
