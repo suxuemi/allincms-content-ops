@@ -17,6 +17,63 @@ from pathlib import Path
 
 
 CHECKS = {
+    # Codex round v0.7.0-r1 (opportunistic Current Site discovery)
+    "current-site-discovery-ref": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"Opportunistic Current Site Discovery",
+        "intent": "discovery sub-protocol reference exists",
+    },
+    "current-site-discovery-preconditions": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"## Preconditions",
+        "intent": "discovery defines state-machine boundary with first-contact (Fprocess.1)",
+    },
+    "current-site-discovery-resume-contract": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"Resume contract",
+        "intent": "login wait/resume contract documented (Fprocess.2)",
+    },
+    "current-site-discovery-two-signals": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"≥ 2 independent signals",
+        "intent": "discovery decisions require ≥ 2 signals (Ffalsifiability.1)",
+    },
+    "current-site-discovery-failure-budget": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"discovery_failure_count",
+        "intent": "fallback to v0.6 ask-4-values after 2 failures",
+    },
+    "current-site-discovery-self-hosted-opt-out": {
+        "file": "allincms-content-ops/references/current-site-discovery.md",
+        "pattern": r"deployment: self-hosted",
+        "intent": "self-hosted opt-out path (Fhistorical.1)",
+    },
+    "discovery-fixtures-dashboard": {
+        "file": "audits/discovery-fixtures/dashboard-snapshot.md",
+        "pattern": r"Workspace Dashboard Snapshot",
+        "intent": "DOM fixture baseline for regression",
+    },
+    "skill-hard-gate-mentions-discovery": {
+        "file": "allincms-content-ops/SKILL.md",
+        "pattern": r"opportunistic discovery sub-protocol",
+        "intent": "Hard Gate text routes through discovery before asking user (v0.6 → v0.7 behavior change)",
+    },
+    "tooling-matrix-discovery-phrasing": {
+        "file": "allincms-content-ops/references/tooling-matrix.md",
+        "pattern": r"open_backend_or_monitor",
+        "intent": "tooling-matrix has discovery-aware phrasing for current_site (Fprocess.3)",
+    },
+    "narrate-whitelist-mentions-discovery": {
+        "file": "allincms-content-ops/references/first-contact.md",
+        "pattern": r"PROJECT_INDEX\.md Current Site auto-fills",
+        "intent": "v0.6 必须报告 whitelist updated to cover discovery auto-fills (Fclassification.1)",
+    },
+    "codex-round-v070": {
+        "file": "audits/codex-rounds/v0.7.0-r1.md",
+        "pattern": r"Codex Round v0\.7\.0-r1",
+        "intent": "v0.7.0 codex round persisted to disk",
+    },
+
     # Codex round v0.6.0-r1 (UX texture from real-run screenshot)
     "first-contact-phase-0-preamble": {
         "file": "allincms-content-ops/references/first-contact.md",

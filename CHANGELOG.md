@@ -6,6 +6,39 @@ All notable changes to this skill are tracked here. Format follows [Keep a Chang
 
 (none yet)
 
+## [0.7.0] — 2026-06-26
+
+Real-run feedback again: user asked "帮我打开后台" and v0.6 AI refused with "请给我这 4 个值: AllinCMS site id / Front-end domain / Workspace URL / Browser profile". User pointed out that `workspace_url` is a constant for all SaaS users, `browser_profile` is auto-detectable, and `site_id` is in the workspace URL after login — none of these should be asked upfront. v0.7 replaces "ask 4 values" with discovery-driven flow.
+
+> Note: pin@0.6 users 不受影响 — discovery 仅在 unpinned 或 ≥0.7 时生效。
+
+Codex round: [audits/codex-rounds/v0.7.0-r1.md](audits/codex-rounds/v0.7.0-r1.md) (7 findings; 2 high / 4 med / 1 low; all applied).
+
+### Added
+
+- `references/current-site-discovery.md` — opportunistic sub-protocol. Opens `workspace.laicms.com` directly when the user requests a backend / publish / monitor action and `Current Site` is incomplete. Handles login wait-and-resume (Fprocess.2), lists sites (1 → confirm; N → pick), auto-fills `site_id` + `front_end_domain` into `PROJECT_INDEX.md` with inline reporting. State-machine boundary with `first-contact.md` Phase 1/2 explicitly defined in Preconditions (Fprocess.1).
+- `audits/discovery-fixtures/dashboard-snapshot.md` — regression fixture capturing the expected `workspace.laicms.com` DOM structure (login wall / dashboard / site card / site detail). Updated in the same PR as any workspace redesign (Ffalsifiability.1).
+- New optional `Current Site` field: `deployment: saas | self-hosted` (default `saas`). `self-hosted` skips Step 1's SaaS URL default and asks the user for the workspace URL once (Fhistorical.1). Backward safe: existing projects without the field default to `saas`.
+- `audit_skill_meta.py`: 11 new regression entries covering discovery preconditions, resume contract, ≥ 2 signal rule, failure budget, self-hosted opt-out, dashboard fixture, SKILL.md Hard Gate routing, tooling-matrix phrasing split, narrate whitelist coverage, and round persistence.
+
+### Changed
+
+- `SKILL.md` Required Context Hard Gate: "STOP and request values" → "first run the opportunistic discovery sub-protocol; only fall back to asking the user explicitly when discovery fails twice in a session / env has no browser / `deployment: self-hosted`".
+- `references/tooling-matrix.md` `user_facing_phrasing` for `current_site`: split into two rows (`× open_backend_or_monitor` discovery-aware; `× publish` notes the field will be filled by discovery the first time backend is opened) per Fprocess.3.
+- `references/first-contact.md` § Don't narrate § 必须报告 whitelist: explicitly mentions `PROJECT_INDEX.md Current Site auto-fills from current-site-discovery.md — inline-report in the same turn` so discovery's writes are not silent (Fclassification.1).
+
+### Fixed
+
+- `scripts/init_content_ops_project.py` template: removed duplicate `- Default content language:` line that caused the self-check (`PROJECT_INDEX must have exactly one 'Default content language:' line`) to raise. The duplicate was a legacy leftover from the v0.3 field rename — found while adding the `deployment` field to the template. Existing projects unaffected; future `init` runs no longer fail.
+
+### Migration
+
+(none — discovery is a new fallback path; v0.6 ask-4-values flow is preserved as the fallback after 2 discovery failures, no browser, or `deployment: self-hosted`.)
+
+For existing v0.6 users: optionally add `- deployment: saas` to your `PROJECT_INDEX.md` Current Site section to make the opt-out explicit. Absent field defaults to `saas`.
+
+[0.7.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.7.0
+
 ## [0.6.0] — 2026-06-26
 
 UX texture refinement driven by a real-run screenshot. v0.5 shipped doctor + check_draft + examples; a user immediately ran the install prompt and the screenshot showed the AI's first message was 8 lines of dense Chinese including paths / SHAs / "已读 X 和 Y" / "现在按 first-contact 进入 Phase 2" — technically correct, but heavy on the newbie. v0.6 fixes the texture without touching contract.
@@ -152,5 +185,5 @@ Initial public release after eight rounds of Codex-style adversarial review (50+
 
 (none — this is the first tagged release.)
 
-[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/suxuemi/allincms-content-ops/compare/v0.7.0...HEAD
 [0.2.0]: https://github.com/suxuemi/allincms-content-ops/releases/tag/v0.2.0

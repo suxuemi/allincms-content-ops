@@ -88,7 +88,7 @@ Throughout the session — not just Phase 0 — **never narrate protocol mechani
 
 **必须报告** (whitelist — always tell the user):
 
-- writing or modifying a file
+- writing or modifying a file (including PROJECT_INDEX.md Current Site auto-fills from `current-site-discovery.md` — inline-report in the same turn)
 - changing wiki content (lessons, backlog, copy-library)
 - installing a dependency
 - running `git push`, `git tag`, modifying `.gitignore` / settings.json

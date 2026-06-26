@@ -75,7 +75,7 @@ Before writing or publishing, locate or create the project root and read:
 
 If these files do not exist, run `scripts/init_content_ops_project.py <project-root>` with the required flags (see `--help`).
 
-**Site identity is required for actions that write to AllinCMS, publish, capture monitoring, run live site health, or otherwise touch shared/remote state.** If `PROJECT_INDEX.md` → `Current Site` has any empty field (site id, front-end domain, workspace URL, browser profile, default content language — 5 fields total), STOP and request values **before any such action**.
+**Site identity is required for actions that write to AllinCMS, publish, capture monitoring, run live site health, or otherwise touch shared/remote state.** If `PROJECT_INDEX.md` → `Current Site` has any empty field, **first run the opportunistic discovery sub-protocol** (`references/current-site-discovery.md`) — it opens the workspace, guides the user through login if needed, lists their sites, and auto-fills `site_id` / `front_end_domain` / `workspace_url` / `browser_profile` (most are constants or auto-detectable). Only fall back to asking the user explicitly when: (a) discovery fails twice in a session, (b) env has no browser automation, or (c) `deployment: self-hosted` is set in `PROJECT_INDEX.md`. Discovery resumes from the first unfilled field — never re-opens login if PROJECT_INDEX already has `site_id`.
 
 **Not gated on Current Site** (allowed with empty fields): local light-mode edits, `audit_content.py --light`, reading wiki/references/raw, `--status` dashboard, `first-contact.md` Phases 1–4 introduction.
 
@@ -209,6 +209,8 @@ All three must point back to this skill and the same `PROJECT_INDEX.md`. Do not 
 - `references/codex-design-reviewer.md`: codex brief for **design-time** review (separate from content-time `codex-adversarial-reviewer.md`). Required for Substantive / Breaking changes per the Update Checklist.
 - `scripts/audit_skill_meta.py`: persistent regression check (one switch per high-severity codex finding); replaces throwaway heredoc self-scans. Run in CI after every `audit_content.py` run.
 - `audits/codex-rounds/`: per-round codex review outputs. CHANGELOG entries reference findings here by relative path.
+- `references/current-site-discovery.md`: opportunistic sub-protocol triggered when a user requests an action needing `Current Site` and some fields are empty — opens workspace, handles login wait+resume, lists sites, auto-fills `site_id` / `front_end_domain`. Replaces the v0.6 "ask 4 values upfront" UX with discovery-driven flow.
+- `audits/discovery-fixtures/dashboard-snapshot.md`: regression fixture capturing workspace.laicms.com DOM structure the discovery protocol relies on. Updated in same PR as workspace redesigns.
 - `scripts/suggest_internal_links.py`: read a draft's frontmatter, scan `web/published/index.md`, print scored candidates for the author to paste as internal links (≥ 3 / page per markdown-style-guide). Scoring weights at top of file; locked by `tests/test_suggest_links.py`.
 - `tests/test_suggest_links.py`: fixture-based ranking test (Ffalsifiability.1 of v0.4.0-r1) — future weight tweaks surface as test diffs.
 - `wiki/products/_ai-drafts/` and `wiki/personas/_ai-drafts/` (created on first-contact Phase 2.5): staging area for AI-bootstrapped wiki pages. User promotes by moving out of `_ai-drafts/` and flipping `trust:` to `human-verified`. `library_health.py` and `audit_content.py` skip this subdir.

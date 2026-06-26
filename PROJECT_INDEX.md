@@ -42,8 +42,10 @@ This is the root index for the AllinCMS content operations kit.
 - Workspace URL:
 - Browser profile (which logged-in profile to use):
 - Default content language: zh-CN
+- deployment: saas
 
 > `Default content language` is site-wide (drives `new_draft.py` body template + `site_health.py` `<html lang>` check). Per-draft `region:` lives in each draft's frontmatter — different axis, not overridden.
+> `deployment` is read by `references/current-site-discovery.md`. Default `saas` opens workspace.laicms.com; change to `self-hosted` if you run AllinCMS yourself.
 - Default content language: zh-CN
 
 ## Operating Rule

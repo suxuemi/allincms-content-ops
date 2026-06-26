@@ -54,7 +54,8 @@ When `doctor.py` reports a non-strong cell, the AI uses the `user_facing_phrasin
 | `pdftotext` | degraded × ingest | `想丢 PDF 给我得装 pdftotext (brew install poppler / apt install poppler-utils)，现在跳过没事` |
 | `pandoc` | degraded × ingest | `想丢 Word / PPT 给我得装 pandoc (brew install pandoc / apt install pandoc)，现在跳过没事` |
 | `picgo` | degraded × media | `想批量上传图片要先打开 PicGo 桌面端（Settings → PicGo-Server 开启）` |
-| `current_site` | missing × publish | `发布前要补 Current Site 字段：{missing-fields}` |
+| `current_site` | missing × open_backend_or_monitor | `打开后台 / 跑监控时我会先开 workspace 引导登录确认，自动补 site_id / 域名 — 不用现在手填` |
+| `current_site` | missing × publish | `Current Site 字段会在第一次开后台时由 discovery 自动补上；不用现在手填` |
 | `published_index` | degraded × internal_links | `还没发过文章，内链建议会是空的（第一篇发完就有了）` |
 | `version_file` | missing × version | `VERSION 文件没了，重新装一次 skill` |
 

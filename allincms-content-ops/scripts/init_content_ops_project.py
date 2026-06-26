@@ -45,10 +45,11 @@ def render_project_index(site_id, frontend_domain, workspace_url, browser_profil
 - Front-end domain: {frontend_domain}
 - Workspace URL: {workspace_url}
 - Browser profile: {browser_profile}
-- Default content language: {default_region}
+- Default content language: {default_content_language}
+- deployment: saas
 
 > `Default content language` is site-wide (drives `new_draft.py` body template + `site_health.py` `<html lang>` check). Per-draft `region:` lives in each draft's frontmatter — different axis, not overridden.
-- Default content language: {default_content_language}
+> `deployment` is read by `references/current-site-discovery.md`. Default `saas` opens workspace.laicms.com; change to `self-hosted` if you run AllinCMS yourself.
 
 ## Operating Rule
 
